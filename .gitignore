@@ -1,0 +1,25 @@
+# Go
+*.exe
+*.test
+*.out
+*.prof
+*.cover
+coverage.out
+coverage.html
+
+# Go build cache
+.gocache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Editor temp
+*~
+
+# Local config
+.env
+.env.local
