@@ -45,5 +45,3 @@ coverage.html
 .env
 .env.local
 
-# 防止意外提交 Go build 产物（更通用的规则）
-/code/*/*/*[!.]*
