@@ -25,6 +25,7 @@ func DemoGoroutineCount() {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
+			time.Sleep(100 * time.Millisecond)
 			_ = id
 		}(i)
 	}

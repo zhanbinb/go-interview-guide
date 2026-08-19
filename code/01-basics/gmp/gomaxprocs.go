@@ -28,7 +28,7 @@ func DemoGOMAXPROCS() {
 
 	// 验证：M 的数量可以 > GOMAXPROCS（通过让 goroutine 进入 syscall）
 	fmt.Println(">> 创建 5 个 syscall 中的 goroutine（time.Sleep）...")
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		go func(id int) {
 			time.Sleep(500 * time.Millisecond) // 进入 syscall
 			_ = id

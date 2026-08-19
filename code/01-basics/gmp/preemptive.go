@@ -31,12 +31,14 @@ func DemoPreemptive() {
 		for {
 			atomic.AddInt64(&counter, 1)
 		}
+		//fmt.Println("死循环 goroutine 结束")
 	}()
 
 	// 另一个 goroutine，应该在 ~500ms 后被调度到
 	go func() {
 		time.Sleep(500 * time.Millisecond)
 		close(done)
+		fmt.Println("定时器 goroutine 结束")
 	}()
 
 	start := time.Now()
