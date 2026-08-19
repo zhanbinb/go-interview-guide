@@ -10,6 +10,27 @@ coverage.html
 # Go build cache
 .gocache/
 
+# Build artifacts
+# (无扩展名的二进制 = go build 的默认产物，文件名等于所在目录名)
+/gmp
+/code/01-basics/*/gmp
+/code/01-basics/*/channel
+/code/01-basics/*/slice
+/code/01-basics/*/map
+/code/01-basics/*/defer
+/code/01-basics/*/gc
+/code/01-basics/*/memory
+/code/01-basics/*/context
+/code/01-basics/*/make-new
+/code/02-important/*/iface
+/code/02-important/*/mutex
+/code/02-important/*/pool
+/code/02-important/*/panic
+/code/02-important/*/compile
+/code/03-advanced/*/gin
+/code/03-advanced/*/gorm
+/code/03-advanced/*/pprof
+
 # IDE
 .idea/
 .vscode/
