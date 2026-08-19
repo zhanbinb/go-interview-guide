@@ -80,13 +80,13 @@
 
 **🎯 关键点速记**
 - **G (Goroutine)**：用户态协程，初始栈 2KB，按需增长/收缩
-- **M (Machine)**：内核线程，由 OS 调度，真正执行 G；数量由 `GOMAXPROCS` 等约束，但实际可超过（处于 syscall / 阻塞时会新起 M）
+- **M (Machine)**：内核线程，由 OS 调度，真正执行 G；M 的数量是**动态变化**的，上限由 `GOMAXTHREADS` 约束（默认 10000），跟 `GOMAXPROCS` 无关。G 进入阻塞 syscall 时 runtime 会新起 M 避免 P 饿死
 - **P (Processor)**：逻辑处理器，持有 **本地 runqueue (LRQ)**；数量 = `GOMAXPROCS`（默认 = CPU 核数）
 - **全局 runqueue (GRQ)**：所有 P 共享，新创建的 G 会先入 LRQ，LRQ 满了才入 GRQ
 - **调度流程**：M 必须绑定 P 才能执行 G → 优先从 LRQ 取 → 周期性 (每 61 次调度) 从 GRQ 偷取 → work stealing 平衡各 P 的负载
 
 **⚠️ 易错提醒**
-- 原文档没说清："P 的个数 = GOMAXPROCS"，但 M 的个数可以远超 P
+- 原文档没说清：P 由 `GOMAXPROCS` 约束，但 **M 的上限是 `GOMAXTHREADS`（默认 10000）**；所以 M 的数量可以远超 P（G 进入阻塞 syscall、GC、sysmon 等都会临时增加 M）
 - "M0 / G0" 是启动时的主线程和主协程，与调度器初始化流程有关
 - Go 1.14 之前是 **协作式调度**（靠函数调用触发），1.14+ 引入 **基于信号的抢占式调度**（sysmon 线程向 M 发送 `SIGURG`）
 
