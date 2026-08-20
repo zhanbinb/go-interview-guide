@@ -45,3 +45,7 @@ coverage.html
 .env
 .env.local
 
+
+# practice 目录里的二进制产物（path = code/01-basics/gmp/practice/xxx）
+code/*/*/practice/practice
+code/*/*/practice/*/[!.]*
