@@ -12,18 +12,20 @@ import (
 //
 // ============================================================================
 // 什么是泄漏？
-//   goroutine 永不退出，且无法被 GC 回收 → 内存泄漏
+//
+//	goroutine 永不退出，且无法被 GC 回收 → 内存泄漏
 //
 // 4 种最常见的泄漏模式：
-//   1. channel 收发永远没人对端
-//   2. context 没 cancel，子 goroutine 永久等 ctx.Done()
-//   3. WaitGroup.Add 永远没 Done
-//   4. 死循环 + 没有退出条件
+//  1. channel 收发永远没人对端
+//  2. context 没 cancel，子 goroutine 永久等 ctx.Done()
+//  3. WaitGroup.Add 永远没 Done
+//  4. 死循环 + 没有退出条件
 //
 // 怎么检测？
 //   - runtime.NumGoroutine() 看趋势
 //   - go test + uber-go/goleak 库
 //   - pprof goroutine profile：go tool pprof http://.../debug/pprof/goroutine
+//
 // ============================================================================
 func DemoLeak() {
 	fmt.Println("=== Goroutine 泄漏演示 ===")

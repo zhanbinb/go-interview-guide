@@ -89,7 +89,6 @@ func TestStackGrowth(t *testing.T) {
 	}
 }
 
-
 // BenchmarkGoroutineCreate 测试 goroutine 创建开销
 func BenchmarkGoroutineCreate(b *testing.B) {
 	var wg sync.WaitGroup

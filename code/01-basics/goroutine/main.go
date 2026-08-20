@@ -1,8 +1,9 @@
 // Goroutine 演示入口
 //
 // 运行方式:
-//   go run .              # 列出所有 demo
-//   go run . <demo-name>  # 运行指定 demo
+//
+//	go run .              # 列出所有 demo
+//	go run . <demo-name>  # 运行指定 demo
 package main
 
 import (

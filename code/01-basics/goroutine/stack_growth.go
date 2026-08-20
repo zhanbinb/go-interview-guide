@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	
 )
 
 // DemoStackGrowth 演示 goroutine 栈的动态增长
@@ -16,6 +15,7 @@ import (
 //   - 栈按需增长（拷贝 + 重定向 stack pointer）
 //   - 最大默认 1GB（可通过 GOMAXSTACKSIZE 或 debug.SetMaxStack 调整）
 //   - 运行时维护 stack pool 复用退出 goroutine 的栈内存
+//
 // ============================================================================
 func DemoStackGrowth() {
 	fmt.Println("=== Goroutine 栈增长演示 ===")

@@ -11,23 +11,26 @@ import (
 //
 // ============================================================================
 // 关键认知：
-//   "goroutine 阻塞" ≠ "M 阻塞" ≠ "程序阻塞"
+//
+//	"goroutine 阻塞" ≠ "M 阻塞" ≠ "程序阻塞"
 //
 // 阻塞分类：
-//   1. 用户态阻塞（runtime 调度器处理）：
-//      - channel 收发（无缓冲 / 缓冲空 / 缓冲满）
-//      - sync.Mutex / RWMutex
-//      - select 等 channel 就绪
-//      - WaitGroup.Wait
-//      → 阻塞时 M 让出 P，runtime 调度别的 G 执行
 //
-//   2. 内核态阻塞（syscall）：
-//      - 文件 I/O（os.Read 等）
-//      - time.Sleep
-//      - C 系统调用
-//      → M 进入内核，新 M 接管 P；netpoller 处理网络 I/O
+//  1. 用户态阻塞（runtime 调度器处理）：
+//     - channel 收发（无缓冲 / 缓冲空 / 缓冲满）
+//     - sync.Mutex / RWMutex
+//     - select 等 channel 就绪
+//     - WaitGroup.Wait
+//     → 阻塞时 M 让出 P，runtime 调度别的 G 执行
+//
+//  2. 内核态阻塞（syscall）：
+//     - 文件 I/O（os.Read 等）
+//     - time.Sleep
+//     - C 系统调用
+//     → M 进入内核，新 M 接管 P；netpoller 处理网络 I/O
 //
 //  3. 死循环（Go 1.14 之前会卡死所有 G，Go 1.14+ 被抢占）
+//
 // ============================================================================
 func DemoBlocking() {
 	fmt.Println("=== Goroutine 阻塞场景演示 ===")
