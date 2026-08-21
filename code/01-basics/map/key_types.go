@@ -15,7 +15,7 @@ func DemoKeyTypes() {
 	fmt.Println("【可以做 key 的类型】:")
 	m1 := map[int]string{1: "a"} // int
 	m2 := map[string]int{"x": 1} // string
-	m3 := map[bool]int{true: 1} // bool
+	m3 := map[bool]int{true: 1}  // bool
 	type Point struct{ X, Y int }
 	m4 := map[Point]string{{1, 2}: "origin"} // struct (字段都可比较)
 	m5 := map[[2]int]string{{1, 2}: "2d"}    // 数组（元素可比较）
@@ -52,10 +52,12 @@ func DemoKeyTypes() {
 	var i1 interface{} = "hello"
 	var i2 interface{} = "hello"
 	var i3 interface{} = 42
-	m8 := map[interface{}]string{i1: "1", i2: "2", i3: "3"}
+	var i4 interface{} = false
+	_ = i4
+	m8 := map[interface{}]string{i1: "1", i2: "2", i3: "3", i4: "4"}
 	fmt.Printf("  m[interface{}] = %v\n", m8)
-	fmt.Printf("  m[\"hello\"] = %q, m[42] = %q (动态类型不同不冲突)\n",
-		m8[i1], m8[i3])
+	fmt.Printf("  m[\"hello\"] = %q, m[42] = %q, m[false] = %q (动态类型不同不冲突)\n",
+		m8[i1], m8[i3], m8[i4])
 	fmt.Println()
 
 	fmt.Println("📌 关键点:")
