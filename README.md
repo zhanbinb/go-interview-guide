@@ -70,14 +70,15 @@ go-interview-guide/
 | **Memory** | 🔥 90%+ | 4 | 5 | 分配层级、逃逸分析、5 种场景 |
 | **Context** | ⭐ 70% | 4 | 6 | 4 方法、6 创建函数、级联取消 |
 
-## 🎯 4 周复习路线
+## 🎯 主题分组（按必问度，不规定具体时间）
 
-| 周 | 主题 | 目标 |
-|:-:|------|------|
-| **Week 1** | GMP + Goroutine + Channel | 能讲清调度机制，能手写 channel 用法 |
-| **Week 2** | Slice + Map + Defer | 能画出底层数据结构图，能讲清扩容规则 |
-| **Week 3** | GC + Memory + Context | 能讲清三色标记、混合写屏障，能用 Context |
-| **Week 4** | 全部 demo + 模拟面试 | 能结合项目经验回答，能熟练 pprof 排查 |
+**第一梯队（🔥 必问，建议优先）**
+- GMP、Goroutine、Channel、Slice、Map、GC、Memory
+
+**第二梯队（⭐ 重点掌握）**
+- Defer、Context
+
+> 按自己节奏学习即可，每个主题相对独立，可以单独深入。
 
 ## 📌 几个关键数据点（面试引用）
 
