@@ -1,0 +1,77 @@
+package main
+
+import "fmt"
+
+// DemoVsNode 演示 Go vs Node.js 的核心区别
+func DemoVsNode() {
+	fmt.Println("=== Go vs Node.js ===")
+	fmt.Println()
+
+	fmt.Println("【1】运行时")
+	fmt.Println("  Go:")
+	fmt.Println("    - 编译为机器码")
+	fmt.Println("    - 启动快（毫秒级）")
+	fmt.Println("    - 内存占用低")
+	fmt.Println("  Node.js:")
+	fmt.Println("    - V8 JS 引擎解释执行")
+	fmt.Println("    - 启动也快（毫秒级）")
+	fmt.Println("    - 内存相对高")
+	fmt.Println()
+
+	fmt.Println("【2】性能")
+	fmt.Println("  Go:")
+	fmt.Println("    - CPU 密集型比 Node 快 10-50 倍")
+	fmt.Println("    - 内存占用少得多")
+	fmt.Println("    - 并发用 goroutine，更轻量")
+	fmt.Println("  Node.js:")
+	fmt.Println("    - I/O 密集型很优秀（事件循环）")
+	fmt.Println("    - V8 优化得不错")
+	fmt.Println("    - 单线程事件循环（worker_threads 可以开多线程）")
+	fmt.Println()
+
+	fmt.Println("【3】类型系统")
+	fmt.Println("  Go:")
+	fmt.Println("    - 静态类型（编译期）")
+	fmt.Println("    - 类型安全")
+	fmt.Println("  Node.js:")
+	fmt.Println("    - JS 动态类型")
+	fmt.Println("    - TypeScript 弥补（编译期）")
+	fmt.Println()
+
+	fmt.Println("【4】并发模型")
+	fmt.Println("  Go:")
+	fmt.Println("    - goroutine + channel")
+	fmt.Println("    - 适合 CPU + I/O 混合")
+	fmt.Println("  Node.js:")
+	fmt.Println("    - 事件循环（event loop）")
+	fmt.Println("    - 单线程 + 回调/Promise")
+	fmt.Println("    - I/O 密集时很强")
+	fmt.Println()
+
+	fmt.Println("【5】生态")
+	fmt.Println("  Go:")
+	fmt.Println("    - 云原生（Docker/K8s 大量 Go）")
+	fmt.Println("    - 后端框架（Gin/Echo/Chi）")
+	fmt.Println("  Node.js:")
+	fmt.Println("    - npm 生态最丰富（百万级包）")
+	fmt.Println("    - 前端全栈（React/Vue 配合）")
+	fmt.Println("    - 工具链（Webpack/Vite）")
+	fmt.Println()
+
+	fmt.Println("【6】典型场景")
+	fmt.Println("  Go:")
+	fmt.Println("    - 高并发后端服务")
+	fmt.Println("    - 微服务/云原生")
+	fmt.Println("    - 性能敏感的 API gateway")
+	fmt.Println("  Node.js:")
+	fmt.Println("    - I/O 密集（API、SSR）")
+	fmt.Println("    - 全栈/前端工具链")
+	fmt.Println("    - 实时应用（WebSocket）")
+	fmt.Println()
+
+	fmt.Println("📌 选择建议:")
+	fmt.Println("   - CPU 密集/高并发：Go")
+	fmt.Println("   - I/O 密集/前端全栈：Node")
+	fmt.Println("   - 性能敏感：Go")
+	fmt.Println("   - 快速开发 + 丰富包：Node")
+}

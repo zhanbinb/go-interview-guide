@@ -1,0 +1,70 @@
+package main
+
+import "fmt"
+
+// DemoVsPython 演示 Go vs Python 的核心区别
+func DemoVsPython() {
+	fmt.Println("=== Go vs Python ===")
+	fmt.Println()
+
+	fmt.Println("【1】类型系统")
+	fmt.Println("  Go:")
+	fmt.Println("    - 静态类型（编译期检查）")
+	fmt.Println("    - 类型安全")
+	fmt.Println("    - 重构友好")
+	fmt.Println("  Python:")
+	fmt.Println("    - 动态类型（运行时检查）")
+	fmt.Println("    - 灵活但容易出错")
+	fmt.Println("    - 重构需靠测试")
+	fmt.Println()
+
+	fmt.Println("【2】性能（典型场景）")
+	fmt.Println("  Go:")
+	fmt.Println("    - 比 Python 快 10-100 倍")
+	fmt.Println("    - 编译为机器码")
+	fmt.Println("    - 适合高并发服务")
+	fmt.Println("  Python:")
+	fmt.Println("    - 解释执行（CPython）")
+	fmt.Println("    - GIL 限制多线程")
+	fmt.Println("    - 用 PyPy/Cython 加速")
+	fmt.Println()
+
+	fmt.Println("【3】并发模型")
+	fmt.Println("  Go:")
+	fmt.Println("    - goroutine: 2KB 栈")
+	fmt.Println("    - 简单 go func() 启动")
+	fmt.Println("    - channel 通信")
+	fmt.Println("  Python:")
+	fmt.Println("    - asyncio (协程)")
+	fmt.Println("    - 复杂 async/await 语法")
+	fmt.Println("    - 多线程受 GIL 限制")
+	fmt.Println()
+
+	fmt.Println("【4】开发效率")
+	fmt.Println("  Go:")
+	fmt.Println("    - 静态类型 = 写多")
+	fmt.Println("    - 编译快（秒级）")
+	fmt.Println("    - 适合大型项目")
+	fmt.Println("  Python:")
+	fmt.Println("    - 动态类型 = 写得快")
+	fmt.Println("    - REPL 交互调试")
+	fmt.Println("    - 适合脚本/数据/AI")
+	fmt.Println()
+
+	fmt.Println("【5】典型场景")
+	fmt.Println("  Go:")
+	fmt.Println("    - 后端微服务（Docker/K8s 生态）")
+	fmt.Println("    - 高并发服务（IM/直播/广告）")
+	fmt.Println("    - DevOps 工具（Docker 本身就是 Go 写的）")
+	fmt.Println("  Python:")
+	fmt.Println("    - 数据科学/AI/ML（NumPy/PyTorch）")
+	fmt.Println("    - 脚本/自动化（运维、爬虫）")
+	fmt.Println("    - Web 后端（Django/Flask）")
+	fmt.Println()
+
+	fmt.Println("📌 选择建议:")
+	fmt.Println("   - 服务/API/高并发：Go")
+	fmt.Println("   - AI/数据/脚本：Python")
+	fmt.Println("   - 性能要求高：Go")
+	fmt.Println("   - 快速原型：Python")
+}
