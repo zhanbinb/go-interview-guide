@@ -14,6 +14,7 @@ type demo struct {
 
 var demos = []demo{
 	{"java", "Go vs Java", DemoVsJava},
+	{"csharp", "Go vs C#", DemoVsCsharp},
 	{"python", "Go vs Python", DemoVsPython},
 	{"node", "Go vs Node.js", DemoVsNode},
 }
