@@ -46,7 +46,7 @@ INSERT INTO t_user (name) VALUES ('Alice'), ('Bob'), ('Charlie');
 SELECT * FROM t_user;
 
 -- 重点: LAST_INSERT_ID()（对应 SQL Server 的 SCOPE_IDENTITY()）
-INSERT INTO t_user (name) VALUES ('David');
+INSERT INTO t_user (name) VALUES ('David1');
 SELECT LAST_INSERT_ID() AS new_id;
 
 -- 自增起始值设置（SQL Server: IDENTITY(100,1) → MySQL: AUTO_INCREMENT=100）
@@ -75,7 +75,7 @@ SELECT * FROM t_product ORDER BY id LIMIT 3;  -- MySQL 等价
 
 -- SQL Server 2012+: OFFSET 2 ROWS FETCH NEXT 3 ROWS ONLY
 SELECT * FROM t_product ORDER BY id LIMIT 3 OFFSET 2;  -- MySQL 等价
--- 或: SELECT * FROM t_product ORDER BY id LIMIT 2, 3;
+-- 或: SELECT * FROM t_product ORDER BY id LIMIT 1, 4;
 
 -- ============================================================
 -- Demo 4: IFNULL vs ISNULL
