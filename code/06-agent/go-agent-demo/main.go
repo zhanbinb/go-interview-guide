@@ -68,22 +68,22 @@ func main() {
 	// =========================================================
 	// 4. 创建 ContextManager
 	// =========================================================
+	prompt := `我之前主要在学习什么后端开发技术？`
+	// 	prompt := `
+	// 请帮我分析用户1001的订单10001。
 
-	prompt := `
-请帮我分析用户1001的订单10001。
+	// 需要查询：
+	// 1. 用户信息
+	// 2. 订单信息
+	// 3. 支付信息
+	// 4. 物流信息
 
-需要查询：
-1. 用户信息
-2. 订单信息
-3. 支付信息
-4. 物流信息
-
-最后请总结：
-- 用户是谁
-- 订单金额和状态
-- 支付状态
-- 物流状态
-`
+	// 最后请总结：
+	// - 用户是谁
+	// - 订单金额和状态
+	// - 支付状态
+	// - 物流状态
+	// `
 
 	promptMsg := openai.UserMessage(prompt)
 
@@ -93,11 +93,15 @@ func main() {
 		},
 	)
 
+	longTermMemory := memory.NewMemory()
+
 	// =========================================================
 	// 5. Memory Demo
 	// =========================================================
 
-	testMemory()
+	testMemory(longTermMemory)
+
+	// return
 
 	// =========================================================
 	// 6. Workflow Demo
@@ -146,6 +150,7 @@ func main() {
 		model,
 		toolRegistry,
 		ctxManager,
+		longTermMemory,
 	)
 
 	// =========================================================
@@ -159,24 +164,50 @@ func main() {
 }
 
 // testMemory 演示简单的跨对话 Memory。
-func testMemory() {
+func testMemory(m *memory.Memory) {
 	fmt.Println()
 	fmt.Println("===== Memory Demo =====")
 
-	m := memory.NewMemory()
+	// =====================================================
+	// 第一轮对话：保存用户信息
+	// =====================================================
 
-	// 第一轮对话：
-	// 用户告诉 Agent 自己叫什么。
-	m.Set(
+	m.Save(
 		"user_name",
 		"张三",
 	)
 
-	// 第二轮对话：
-	// Agent 从 Memory 中获取之前保存的信息。
-	name := m.Get("user_name")
+	m.Save(
+		"skill",
+		"Go 后端开发",
+	)
 
-	fmt.Println("Memory user_name:", name)
+	fmt.Println("Saved Memory:")
+
+	for _, item := range m.All() {
+		fmt.Printf(
+			"%s = %s\n",
+			item.Key,
+			item.Value,
+		)
+	}
+
+	// =====================================================
+	// 第二轮对话：搜索相关记忆
+	// =====================================================
+
+	fmt.Println()
+	fmt.Println("Search Memory: Go")
+
+	results := m.Search("Go")
+
+	for _, item := range results {
+		fmt.Printf(
+			"%s = %s\n",
+			item.Key,
+			item.Value,
+		)
+	}
 
 	fmt.Println()
 }

@@ -173,3 +173,27 @@ func (cm *ContextManager) BuildMessages() []openai.ChatCompletionMessageParamUni
 
 	return messages
 }
+
+func (cm *ContextManager) LastUserMessage() string {
+	for i := len(cm.messages) - 1; i >= 0; i-- {
+		data, err := json.Marshal(cm.messages[i])
+		if err != nil {
+			continue
+		}
+
+		var message struct {
+			Role    string `json:"role"`
+			Content string `json:"content"`
+		}
+
+		if err := json.Unmarshal(data, &message); err != nil {
+			continue
+		}
+
+		if message.Role == "user" {
+			return message.Content
+		}
+	}
+
+	return ""
+}

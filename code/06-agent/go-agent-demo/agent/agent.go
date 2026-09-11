@@ -21,10 +21,11 @@ import (
 // 5. 循环调用 LLM
 // 6. 最终得到 Final Answer
 type Agent struct {
-	client       *openai.Client
-	model        string
-	toolRegistry *tools.Registry
-	memory       *memory.ContextManager
+	client         *openai.Client
+	model          string
+	toolRegistry   *tools.Registry
+	contextManager *memory.ContextManager
+	longTermMemory *memory.Memory
 }
 
 // New 创建 Agent。
@@ -32,13 +33,15 @@ func New(
 	client *openai.Client,
 	model string,
 	toolRegistry *tools.Registry,
-	memory *memory.ContextManager,
+	contextManager *memory.ContextManager,
+	longTermMemory *memory.Memory,
 ) *Agent {
 	return &Agent{
-		client:       client,
-		model:        model,
-		toolRegistry: toolRegistry,
-		memory:       memory,
+		client:         client,
+		model:          model,
+		toolRegistry:   toolRegistry,
+		contextManager: contextManager,
+		longTermMemory: longTermMemory,
 	}
 }
 
@@ -71,7 +74,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		// 1. 检查 Context 是否需要摘要
 		// =====================================================
 
-		if err := a.memory.MaybeSummarize(
+		if err := a.contextManager.MaybeSummarize(
 			ctx,
 			a.client,
 			a.model,
@@ -86,7 +89,18 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		// 2. 构造当前上下文
 		// =====================================================
 
-		messages := a.memory.BuildMessages()
+		messages := a.contextManager.BuildMessages()
+
+		query := a.contextManager.LastUserMessage()
+
+		memoryContext := a.buildMemoryContext(query)
+
+		if memoryContext != "" {
+			messages = append(
+				messages,
+				openai.UserMessage(memoryContext),
+			)
+		}
 
 		// =====================================================
 		// 3. 调用 LLM
@@ -119,7 +133,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		// 4. 保存 Assistant Message
 		// =====================================================
 
-		a.memory.Add(
+		a.contextManager.Add(
 			message.ToParam(),
 		)
 
@@ -171,7 +185,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 					toolName,
 				)
 
-				a.memory.Add(
+				a.contextManager.Add(
 					openai.ToolMessage(
 						result,
 						toolCall.ID,
@@ -210,7 +224,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 			// 6.3 把 Tool Result 放回 Context
 			// -------------------------------------------------
 
-			a.memory.Add(
+			a.contextManager.Add(
 				openai.ToolMessage(
 					result,
 					toolCall.ID,
@@ -233,3 +247,25 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		// =====================================================
 	}
 }
+
+// func (a *Agent) buildMemoryContext(query string) string {
+// 	results := a.longTermMemory.Search("Go")
+
+// 	if len(results) == 0 {
+// 		return ""
+// 	}
+
+// 	var builder strings.Builder
+
+// 	builder.WriteString("以下是与当前请求相关的长期记忆：\n")
+
+// 	for _, item := range results {
+// 		builder.WriteString("- ")
+// 		builder.WriteString(item.Key)
+// 		builder.WriteString(": ")
+// 		builder.WriteString(item.Value)
+// 		builder.WriteString("\n")
+// 	}
+
+// 	return builder.String()
+// }
