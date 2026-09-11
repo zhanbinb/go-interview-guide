@@ -1,8 +1,9 @@
 # Agent 开发极速上手学习计划
 
-> 🎯 目标：周末两天跑通一个能用的 Agent Demo
+> 🎯 目标：系统性地概览 Agent 开发，建立全景认知
 > 📚 假设：已有 Go 后端基础，正在准备面试
-> ⏱️ 时间预算：8 ~ 10 小时
+> ⏱️ 时间预算：12 步，约 13.5 小时（不含已完成部分）
+> 📅 路线版本：v3（Step 6/7 已完成，进入 Step 8 Memory）
 
 ---
 
@@ -23,50 +24,135 @@
 
 ## 1. 技术栈选择（择一即可）
 
-| 方案 | 适合 | 上手时间 | 推荐度 |
-|------|------|---------|--------|
-| **Python + LangGraph** | 想做严肃 Agent 框架 | 2h | ⭐⭐⭐⭐⭐ |
-| TypeScript + Vercel AI SDK | 前端 / 全栈背景 | 1h | ⭐⭐⭐⭐ |
-| Python + 裸 OpenAI API | 想理解原理 | 1h | ⭐⭐⭐⭐ |
-| Go + Eino（字节） | 想用 Go | 3h | ⭐⭐⭐ |
+| 方案 | 适合 | 推荐度 |
+|------|------|--------|
+| **Go + openai-go** | 你正在用 ✅ | ⭐⭐⭐⭐⭐ |
+| Python + LangGraph | 严肃 Agent 框架 | ⭐⭐⭐⭐⭐ |
+| TypeScript + Vercel AI SDK | 前端 / 全栈背景 | ⭐⭐⭐⭐ |
+| Python + 裸 OpenAI API | 想理解原理 | ⭐⭐⭐⭐ |
 
-### 我的建议：选 Python + LangGraph
-
-理由：
-- Agent 领域 Python 是事实标准，生态最全
-- 不熟 Python 也无所谓，Agent 这块 API 很薄
-- LangGraph 把 Agent 抽象成「图」，概念清晰，官方文档质量高
+> 💡 **当前选择**：Go + `openai-go`（Day 1 Demo 已用）。OpenAI 兼容协议一家通用（DeepSeek / MiniMax / OpenAI 都支持）。
 
 ---
 
-## 2. 两天学习路线
+## 2. 12 步学习路线（主线）
 
-### 📅 Day 1（4h）：跑通最小 Demo
+按 **「由内向外、由浅入深」** 组织：
 
-**Step 1 · 30 min · Function Calling 原理**
-- [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)
-- [Anthropic Tool Use](https://docs.anthropic.com/en/docs/tool-use)
-- 目标：理解「怎么让 LLM 返回结构化函数调用」
+### ✅ 已完成（Step 1-5）
 
-**Step 2 · 1h · 跑通 LangGraph Hello World**
-- [LangGraph Quick Start](https://langchain-ai.github.io/langgraph/)
-- 直接复制官方 `create_react_agent` 的 5 行代码跑通
+| Step | 主题 | 状态 | 对应 Demo |
+|------|------|------|----------|
+| 1 | LLM API | ✅ | [code/06-agent/go-agent-demo/main.go](../../code/06-agent/go-agent-demo/main.go) |
+| 2 | Tool Calling | ✅ | 同上 |
+| 3 | Tool Result | ✅ | 同上 |
+| 4 | Tool Registry | ✅ | 同上 |
+| 5 | Agent Loop（ReAct） | ✅ | 同上 |
 
-**Step 3 · 2.5h · 做第一个 Agent Demo**
-- 选下面 §4 的 Demo A/B/C 之一动手
+> 📖 Demo 文档：[code/06-agent/go-agent-demo/README.md](../../code/06-agent/go-agent-demo/README.md)
 
-### 📅 Day 2（4h）：进阶 + 读源码
+### 🎯 待学习（Step 6-12）
 
-**Step 4 · 1h · 理解 Agent 模式**
-- [LangGraph 概念文档](https://langchain-ai.github.io/langgraph/concepts/)
-- 重点：ReAct / Plan-and-Execute / Reflexion 区别
+---
 
-**Step 5 · 1h · Memory / 多 Agent / Human-in-the-loop**
-- [LangGraph How-to 集合](https://langchain-ai.github.io/langgraph/how-tos/)
-- 挑 3 个感兴趣的 how-to 跑一遍
+#### **Step 6 · Context Management**（2h）⭐ 下一步
 
-**Step 6 · 2h · 读一个真实开源项目**
-- 见 §5 推荐清单
+**核心问题**：Agent 跑久了消息历史会爆，怎么管？
+
+**学什么**：
+- Token 计数 + 限制（不同模型上限：gpt-4o=128k, claude-sonnet-4-5=200k）
+- 消息截断策略：保留最近 N 条 / 摘要压缩 / 滑动窗口
+- Go 特有的 `context.Context`（超时、取消、跨 goroutine 传值）
+- System Prompt 的组织方式
+
+**怎么学**（最小动手）：
+1. 给现有 Demo 加 **max iterations**（防止死循环）
+2. 加 **context.WithTimeout**（API 调用超时）
+3. 实现一个**简单消息截断器**（超过 N 条就压缩最早的）
+
+---
+
+#### **Step 7 · Agent 编排模式**（1.5h）
+
+**核心问题**：除了 ReAct，主流还有哪些模式？
+
+**必读**：[Anthropic《Building Effective Agents》](https://www.anthropic.com/research/building-effective-agents)（30 分钟讲清所有模式）
+
+**5 个核心模式**：
+
+| 模式 | 一句话 | 适用场景 |
+|------|------|---------|
+| Prompt Chaining | 流水线，固定步骤 | 翻译→审校→格式化 |
+| Routing | 按类型路由到不同子流程 | 客服分类后派发 |
+| Parallelization | 并行执行子任务 | 多角度评估同一个东西 |
+| Orchestrator-Workers | 一个总指挥调度多个 worker | 复杂任务拆解 |
+| Autonomous Agent | 完全自主决策 | 你已经做的 ReAct ✅ |
+
+**怎么学**：通读 + 用 LangGraph 跑一个 Chaining 示例
+
+---
+
+#### **Step 8 · Memory**（2h）
+
+**核心问题**：怎么让 Agent **跨会话**"记住"东西？
+
+**学什么**：
+- 短期记忆：messages 历史（已会）
+- 长期记忆：checkpointer / store（LangGraph 概念）
+- 事实抽取：让 LLM 自动从对话中提取关键信息（如"用户喜欢简洁回答"）
+- **RAG 作为 Memory 的一种实现方式**（不单独展开，需要时再深入）
+
+**怎么学**：用 LangGraph 的 `MemorySaver` 或自己写一个文件 checkpointer
+
+---
+
+#### **Step 9 · MCP**（1h，概念为主）
+
+**核心问题**：Tool 调用的**标准接口**是什么？
+
+**学什么**：
+- [Model Context Protocol 官方文档](https://modelcontextprotocol.io/)
+- 三个核心概念：MCP Server / MCP Client / Tool Resource
+- 看一个现成 MCP Server 实现（如 `@modelcontextprotocol/server-filesystem`）
+- **不写代码**，理解 MCP 跟你现在的 `toolRegistry` 是同一层抽象的标准化
+
+---
+
+#### **Step 10 · Multi-Agent**（2h）
+
+**核心问题**：多个 Agent 怎么协作？
+
+**学什么**：
+- 主流框架：[AutoGen](https://github.com/microsoft/autogen) / [CrewAI](https://github.com/crewAIInc/crewAI)
+- 两种架构：
+  - **Supervisor 模式**：一个总 Agent 调度其他 Agent
+  - **Swarm 模式**：Agent 之间对等通信
+- 选一个框架跑一个 2-Agent 协作 Demo（建议 CrewAI，上手快）
+
+---
+
+#### **Step 11 · Evaluation**（2h）⭐ 评估方法论
+
+**核心问题**：怎么知道 Agent **变好了还是变烂了**？
+
+**学什么**：
+- **Trajectory Eval**：工具调用对不对、步骤对不对
+- **Outcome Eval**：最终结果对不对
+- 数据集怎么造（人工 / LLM 生成）
+- 工具：[LangSmith](https://smith.langchain.com/) / [LangFuse](https://langfuse.com/) / DeepEval
+- 跑一个最小评估（10 个 case 起步）
+
+---
+
+#### **Step 12 · Agent 工程化**（2h）
+
+**核心问题**：怎么把 Demo 变成能上线的东西？
+
+**学什么**：
+- **部署**：FastAPI 包装 / Serverless
+- **监控**：结构化日志、Token 消耗、错误率、延迟
+- **成本控制**：模型选择（小模型预处理 + 大模型兜底）、缓存、限流
+- **安全**：危险工具的二次确认、Prompt 注入防护、敏感信息脱敏
 
 ---
 
@@ -76,10 +162,12 @@
 
 | 资料 | 链接 | 评级 |
 |------|------|------|
-| LangGraph 官方文档 | https://langchain-ai.github.io/langgraph/ | ⭐⭐⭐⭐⭐ |
+| **Anthropic《Building Effective Agents》** | https://www.anthropic.com/research/building-effective-agents | ⭐⭐⭐⭐⭐ |
 | Anthropic Prompt Engineering | https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview | ⭐⭐⭐⭐⭐ |
+| LangGraph 官方文档 | https://langchain-ai.github.io/langgraph/ | ⭐⭐⭐⭐⭐ |
+| OpenAI Function Calling | https://platform.openai.com/docs/guides/function-calling | ⭐⭐⭐⭐ |
 | OpenAI Cookbook | https://cookbook.openai.com/ | ⭐⭐⭐⭐ |
-| LangChain 文档 | https://python.langchain.com/ | ⭐⭐⭐⭐ |
+| MCP 官方文档 | https://modelcontextprotocol.io/ | ⭐⭐⭐⭐ |
 
 ### 🎥 视频
 
@@ -90,24 +178,24 @@
 ### 📚 中文资料
 
 - 宝玉翻译的 Anthropic 博文（博客 / 公众号「宝玉的分享」）
-- 知乎搜「LLM Agent 入门」看 3 ~ 5 篇高赞
+- 知乎搜「LLM Agent 入门」看 3~5 篇高赞
 - LangChain 中文社区：https://langchain.com.cn
 
 ### 🛠️ 工具
 
-- **大模型 API**：OpenAI / Anthropic / DeepSeek（国产便宜）/ 通义千问
+- **大模型 API**：OpenAI / Anthropic / DeepSeek（国产便宜）/ 通义千问 / MiniMax
 - **Agent 框架**：LangGraph（推荐）/ AutoGen / CrewAI
-- **调试工具**：[LangSmith](https://smith.langchain.com/)（看 Agent 每一步决策过程）
+- **调试 / 观测**：LangSmith / LangFuse
+- **协议**：MCP（Model Context Protocol）
 
 ---
 
 ## 4. 推荐 Demo 项目（任选一）
 
-### 🥇 Demo A：个人助理 Agent（首选）
+### 🥇 Demo A：个人助理 Agent（✅ 已完成 Go 版）
 
 **功能**：能查天气 + 能算数学 + 能查日历  
-**工具**：3 个简单 function（`get_weather` / `calculate` / `search_notes`）  
-**亮点**：真正理解「Agent 自己决定调哪个工具」
+**当前实现**：`query_order` + `get_user` 两个 mock 工具
 
 ### 🥈 Demo B：研究助手 Agent
 
@@ -115,7 +203,7 @@
 **涉及**：搜索 API + Plan-and-Execute 模式  
 **亮点**：理解多步推理与子任务拆分
 
-### 🥈 Demo C：自动化运维 Agent（贴合 web3 背景）
+### 🥉 Demo C：自动化运维 Agent（贴合 web3 背景）
 
 **功能**：自然语言操作数据库 / 调用合约（dry-run）  
 **涉及**：ReAct + 安全校验层  
@@ -127,22 +215,23 @@
 
 | 项目 | 说明 | 看什么 |
 |------|------|--------|
-| [langgraph](https://github.com/langchain-ai/langgraph) | LangGraph 官方 | 看 `examples/` 文件夹 |
-| [AutoGen](https://github.com/microsoft/autogen) | 微软多 Agent 框架 | 看 `test/` 里的用例 |
-| [crewAI](https://github.com/crewAIInc/crewAI) | 多 Agent 协作 | 看 `examples/` |
-| [gpt-engineer](https://github.com/gpt-engineer-org/gpt-engineer) | 写代码的 Agent | 体会 Agent 完成复杂任务的感觉 |
+| [langgraph](https://github.com/langchain-ai/langgraph) | LangGraph 官方 | 看 `examples/` 文件夹（Step 7/8/10 都会用到） |
+| [AutoGen](https://github.com/microsoft/autogen) | 微软多 Agent 框架 | 看 `test/` 里的用例（Step 10） |
+| [crewAI](https://github.com/crewAIInc/crewAI) | 多 Agent 协作 | 看 `examples/`（Step 10） |
+| [gpt-engineer](https://github.com/gpt-engineer-org/gpt-engineer) | 写代码的 Agent | 体会 Agent 完成复杂任务 |
 | [dify](https://github.com/langgenius/dify) | 可视化 Agent 平台 | 跑起来玩，理解产品层 |
+| [modelcontextprotocol](https://github.com/modelcontextprotocol) | MCP 官方 | 看 server 实现（Step 9） |
 
 ---
 
-## 6. 环境准备（Day 1 之前搞定）
+## 6. 环境准备
 
-### Python 环境
+### Python 环境（用于跑 LangGraph / CrewAI 示例）
 
 ```bash
 python -m venv .venv-agent
 source .venv-agent/bin/activate
-pip install langgraph langchain-openai tavily-python python-dotenv
+pip install langgraph langchain-openai crewai tavily-python python-dotenv
 ```
 
 ### API Key（至少准备一个）
@@ -159,55 +248,80 @@ export OPENAI_BASE_URL=https://api.deepseek.com
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-> 💡 **省钱建议**：调试阶段用 `gpt-4o-mini` 或 `deepseek-chat`，跑通后再换 `gpt-4o` / `claude-sonnet-4-5`。
+> 💡 **省钱建议**：调试阶段用 `gpt-4o-mini` / `deepseek-chat`，跑通后再换 `gpt-4o` / `claude-sonnet-4-5`。
 
 ---
 
 ## 7. 学完后自检清单
 
-完成后能回答下面问题，说明超过 80% 的 Agent 初学者：
+完成后能回答下面问题，说明对 Agent 领域有系统认知：
 
+**Step 1-5（基础）**：
 - [ ] 1. Function Calling 和普通 Prompt 调用的本质区别是什么？
 - [ ] 2. ReAct 模式的「Thought / Action / Observation」是哪三步？
 - [ ] 3. Agent 为什么会陷入死循环？怎么防止？
-- [ ] 4. 短期记忆（thread）和长期记忆（store）的实现方式有什么不同？
-- [ ] 5. 单 Agent 和多 Agent 协作（supervisor / swarm）各适合什么场景？
-- [ ] 6. Token 成本和延迟在 Agent 里为什么会被放大？
-- [ ] 7. 怎么评估一个 Agent 的好坏？需要看哪些指标？
+- [ ] 4. 为什么 `tool_call.id` 必须回传？
+
+**Step 6-9（中级）**：
+- [ ] 5. Token 成本和延迟在 Agent 里为什么会被放大？
+- [ ] 6. context.Context 和 Agent 的「上下文」是什么关系？
+- [ ] 7. Anthropic 提到的 5 种编排模式各自适用什么场景？
+- [ ] 8. 短期记忆（thread）和长期记忆（store）的实现方式有什么不同？
+- [ ] 9. MCP 解决的核心问题是什么？跟你写的 toolRegistry 是同一层抽象吗？
+
+**Step 10-12（高级）**：
+- [ ] 10. 单 Agent 和多 Agent 协作（supervisor / swarm）各适合什么场景？
+- [ ] 11. Trajectory Eval 和 Outcome Eval 的区别？
+- [ ] 12. Agent 上线前最关键的 3 个工程化考虑是什么？
 
 ---
 
-## 8. 学习原则（血的教训）
+## 8. 学习原则
 
 1. **不要先看理论再看代码** —— 直接复制官方 Quick Start 跑起来，回头再补理论
-2. **第一天就动手**，哪怕只是改一个参数观察行为变化
-3. **Debug 时打开 LangSmith**，看 Agent 每一步在干啥，这是核心技能
-4. **不建议先碰 AutoGen / CrewAI**，等 LangGraph 熟了再看，它们是更高层抽象
-5. **不要追新框架**，LangGraph + 主流大模型 API 已经能覆盖 90% 场景
+2. **每步先跑通最小版本**，再加功能
+3. **Debug 时打开 LangSmith / 日志**，看 Agent 每一步在干啥
+4. **不建议先碰 AutoGen / CrewAI**，等 LangGraph 熟了再看（Step 10 才用）
+5. **不要追新框架**，LangGraph + 主流大模型 API 已能覆盖 90% 场景
+6. **每个 Step 跑通后再进下一步**，不要跳过
 
 ---
 
 ## 9. 进度追踪
 
-| 阶段 | 状态 | 备注 |
-|------|------|------|
-| Day 1 Step 1：Function Calling 原理 | ⬜ | |
-| Day 1 Step 2：LangGraph Hello World | ⬜ | |
-| Day 1 Step 3：第一个 Demo 跑通 | ⬜ | |
-| Day 2 Step 4：理解 Agent 模式 | ⬜ | |
-| Day 2 Step 5：Memory / 多 Agent / HITL | ⬜ | |
-| Day 2 Step 6：读一个开源项目源码 | ⬜ | |
-| 自检清单 7 题全部能答 | ⬜ | |
+| Step | 主题 | 状态 | 备注 |
+|------|------|------|------|
+| 1 | LLM API | ✅ | Day 1 Demo |
+| 2 | Tool Calling | ✅ | Day 1 Demo |
+| 3 | Tool Result | ✅ | Day 1 Demo |
+| 4 | Tool Registry | ✅ | Day 1 Demo |
+| 5 | Agent Loop（ReAct） | ✅ | Day 1 Demo |
+| **6** | **Context Management** | ✅ | [笔记](notes/context-management.md) |
+| 7 | Agent 编排模式 | ✅ | [笔记](notes/agent-orchestration.md) |
+| **8** | **Memory** | ⬜ | **🎯 下一步** · [预览](notes/memory-preview.md) |
+| 9 | MCP | ⬜ | |
+| 10 | Multi-Agent | ⬜ | |
+| 11 | Evaluation | ⬜ | |
+| 12 | Agent 工程化 | ⬜ | |
 
 ---
 
-## 10. 下一步可以做什么？
+## 10. 学习笔记
 
-学完之后，可以告诉我，我会帮你：
+按主题整理的深度笔记，配合代码一起看：
 
-- **A. 把 Demo A 的完整代码搭起来**（含 3 个工具 + LangGraph + 单元测试）
-- **B. 把 Demo B 的搜索 + 总结链路写出来**
-- **C. 把 Demo C 跟你之前的 scanner 项目结合，做一个「AI + 区块链事件分析」Agent**
-- **D. 用你熟悉的 Go + Eino 重写一遍，对比两个生态差异**
+| 笔记 | 内容 | 状态 |
+|------|------|------|
+| [notes/refactoring.md](notes/refactoring.md) | 项目重构：从单文件 main.go 到模块化 | ✅ |
+| [notes/context-management.md](notes/context-management.md) | Step 6 · ContextManager 实现与权衡 | ✅ |
+| [notes/agent-orchestration.md](notes/agent-orchestration.md) | Step 7 · 三种 Workflow 编排模式 | ✅ |
+| [notes/memory-preview.md](notes/memory-preview.md) | Step 8 · Memory 预备与局限 | ⬜ |
 
-挑一个，我就开干。
+## 11. 下一步
+
+**Step 8 · Memory** —— 离你当前代码最近、改动最小、收益最大
+
+可以告诉我「开始 Step 8」，我会帮你：
+- 把当前 `Memory` 升级为支持跨进程持久化（Redis / 文件）
+- 加 user_id 区分不同用户的 Memory
+- 加一个简单的事实抽取 demo（让 LLM 从对话中自动提取 key-value）
