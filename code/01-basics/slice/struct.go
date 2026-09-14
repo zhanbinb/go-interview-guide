@@ -15,11 +15,12 @@ type SliceHeader struct {
 // DemoStruct 演示 slice 三元组 (ptr, len, cap)
 //
 // slice 本质是这样一个 struct：
-//   type SliceHeader struct {
-//       Data uintptr  // 指向底层数组
-//       Len  int      // 长度（<= Cap）
-//       Cap  int      // 容量（从 Data 位置到底层数组末尾）
-//   }
+//
+//	type SliceHeader struct {
+//	    Data uintptr  // 指向底层数组
+//	    Len  int      // 长度（<= Cap）
+//	    Cap  int      // 容量（从 Data 位置到底层数组末尾）
+//	}
 func DemoStruct() {
 	s := make([]int, 3, 5)
 	fmt.Printf("s := make([]int, 3, 5)\n")

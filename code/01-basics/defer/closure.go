@@ -5,8 +5,9 @@ import "fmt"
 // DemoClosure 演示 defer 的闭包陷阱
 //
 // 两种写法：
-//   defer func(x int) { ... }(x)   // 参数立即求值（拷贝当时的值）
-//   defer func() { ... }()         // 闭包延迟求值（看到最终值）
+//
+//	defer func(x int) { ... }(x)   // 参数立即求值（拷贝当时的值）
+//	defer func() { ... }()         // 闭包延迟求值（看到最终值）
 //
 // 面试问法："defer 的参数什么时候求值？"
 func DemoClosure() {

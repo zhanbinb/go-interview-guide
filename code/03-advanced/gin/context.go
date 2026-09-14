@@ -19,7 +19,7 @@ type Context struct {
 	Status  int
 	Keys    map[string]any // 用于中间件传值
 	handler []HandlerFunc  // 中间件链
-	index   int           // 当前执行到第几个 handler
+	index   int            // 当前执行到第几个 handler
 }
 
 func NewContext(w http.ResponseWriter, r *http.Request) *Context {
@@ -97,7 +97,7 @@ func DemoContext() {
 
 	ctx2 := NewContext(nil, nil)
 	_ = ctx2.JSON(201, map[string]string{"id": "1"})
-	fmt.Printf("  JSON 已编码\\n\\n", )
+	fmt.Printf("  JSON 已编码\\n\\n")
 
 	// 2. 传值
 	fmt.Println("【2】中间件传值 (Set/Get)")

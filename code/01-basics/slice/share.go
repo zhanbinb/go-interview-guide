@@ -8,10 +8,11 @@ import (
 // DemoShare 演示截取 slice 共享底层数组
 //
 // 关键认知：
-//   s2 := s1[1:3] 是 O(1) 操作
-//   只是改了 ptr/len/cap，不复制元素
-//   所以 s1 和 s2 共享底层数组
-//   改 s2[0] 会影响 s1[1]
+//
+//	s2 := s1[1:3] 是 O(1) 操作
+//	只是改了 ptr/len/cap，不复制元素
+//	所以 s1 和 s2 共享底层数组
+//	改 s2[0] 会影响 s1[1]
 func DemoShare() {
 	fmt.Println("=== slice 共享底层数组 ===")
 	fmt.Println()
@@ -51,7 +52,7 @@ func DemoShare() {
 	// 实验 4：3 层截取
 	fmt.Println("【实验 4】多层截取")
 	s1 = []int{1, 2, 3, 4, 5}
-	s2 = s1[1:4] // [2, 3, 4]
+	s2 = s1[1:4]  // [2, 3, 4]
 	s3 := s2[1:3] // [3, 4]
 	fmt.Printf("  s1=%v s2=%v s3=%v\n", s1, s2, s3)
 	fmt.Printf("  &s1[1]==&s2[0]: %v\n", &s1[1] == &s2[0])

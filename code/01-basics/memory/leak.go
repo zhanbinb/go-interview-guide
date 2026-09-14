@@ -10,18 +10,20 @@ import (
 //
 // ============================================================================
 // 什么是内存泄漏？
-//   内存被分配后，永远无法被 GC 回收
+//
+//	内存被分配后，永远无法被 GC 回收
 //
 // 4 种常见场景：
-//   1. goroutine 泄漏（永不退出）
-//   2. 全局 slice/map 持续增长（没删除）
-//   3. 循环引用（Go GC 能处理一般循环，但 channel 闭包等仍可能）
-//   4. 未关闭的 timer / cgo 内存
+//  1. goroutine 泄漏（永不退出）
+//  2. 全局 slice/map 持续增长（没删除）
+//  3. 循环引用（Go GC 能处理一般循环，但 channel 闭包等仍可能）
+//  4. 未关闭的 timer / cgo 内存
 //
 // 排查工具：
 //   - pprof: go tool pprof http://host/debug/pprof/heap
 //   - go test -memprofile
 //   - runtime.MemStats: HeapAlloc / HeapInuse / HeapReleased
+//
 // ============================================================================
 func DemoLeak() {
 	fmt.Println("=== 内存泄漏 4 种场景 ===")

@@ -9,12 +9,13 @@ import (
 // DemoStruct 演示 Context 接口和 4 个方法
 //
 // Context 接口（context/context.go）：
-//   type Context interface {
-//       Deadline() (deadline time.Time, ok bool)
-//       Done() <-chan struct{}
-//       Err() error
-//       Value(key any) any
-//   }
+//
+//	type Context interface {
+//	    Deadline() (deadline time.Time, ok bool)
+//	    Done() <-chan struct{}
+//	    Err() error
+//	    Value(key any) any
+//	}
 //
 // 面试问法："Context 接口有哪些方法？"
 func DemoStruct() {

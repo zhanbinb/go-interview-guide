@@ -57,7 +57,7 @@ func DemoPatterns() {
 		fmt.Printf("  子 ctx 取消了: %v\n", child.Err())
 	}()
 	time.Sleep(50 * time.Millisecond)
-	pcancel() // 取消父 ctx
+	pcancel()                          // 取消父 ctx
 	time.Sleep(100 * time.Millisecond) // 等待 goroutine 打印
 	fmt.Println()
 

@@ -4,12 +4,13 @@ import "fmt"
 
 // Model 模拟 gorm.Model（基础字段）
 // GORM 的 gorm.Model 是这样的：
-//   type Model struct {
-//       ID        uint      `gorm:"primarykey"`
-//       CreatedAt time.Time `gorm:"autoCreateTime"`
-//       UpdatedAt time.Time `gorm:"autoUpdateTime"`
-//       DeletedAt gorm.DeletedAt `gorm:"index"` // 软删除
-//   }
+//
+//	type Model struct {
+//	    ID        uint      `gorm:"primarykey"`
+//	    CreatedAt time.Time `gorm:"autoCreateTime"`
+//	    UpdatedAt time.Time `gorm:"autoUpdateTime"`
+//	    DeletedAt gorm.DeletedAt `gorm:"index"` // 软删除
+//	}
 type Model struct {
 	ID        int
 	CreatedAt string
@@ -20,7 +21,7 @@ type Model struct {
 // User 用户模型
 type User struct {
 	Model
-	Name  string `db:"user_name"`  // 列名映射
+	Name  string `db:"user_name"` // 列名映射
 	Email string `db:"email"`
 	Age   int    `db:"age"`
 }
@@ -61,7 +62,7 @@ func DemoModel() {
 	now := "2026-01-15"
 	u2 := User{Model: Model{ID: 2, DeletedAt: &now}}
 	fmt.Printf("  DeletedAt = %v 表示已删除\\n", u2.DeletedAt)
-	fmt.Printf("  DeletedAt = nil 表示未删除\\n\\n", )
+	fmt.Printf("  DeletedAt = nil 表示未删除\\n\\n")
 
 	// 4. 关联关系
 	fmt.Println("【4】关联关系（外键）")

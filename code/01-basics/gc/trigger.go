@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	
+
 	"runtime"
 	"runtime/debug"
 )
@@ -10,10 +10,10 @@ import (
 // DemoTrigger 演示 GC 触发时机
 //
 // GC 会在以下任一条件满足时触发：
-//   1. 堆内存相比上次 GC 翻了 GOGC 倍（默认 100，即翻倍）
-//   2. 2 分钟内没 GC（forcegc 守护协程）
-//   3. 手动调用 runtime.GC()
-//   4. Go 1.21+: 达到 GOMEMLIMIT 软限制
+//  1. 堆内存相比上次 GC 翻了 GOGC 倍（默认 100，即翻倍）
+//  2. 2 分钟内没 GC（forcegc 守护协程）
+//  3. 手动调用 runtime.GC()
+//  4. Go 1.21+: 达到 GOMEMLIMIT 软限制
 //
 // 面试问法："GC 什么时候触发？"
 func DemoTrigger() {

@@ -41,7 +41,7 @@ func TestAutoGC(t *testing.T) {
 	slices := make([][]byte, 0)
 	for i := 0; i < 10000; i++ {
 		s := make([]byte, 4096) // 4KB/个，总 40MB
-		s[0] = 1                  // 防止优化
+		s[0] = 1                // 防止优化
 		slices = append(slices, s)
 	}
 

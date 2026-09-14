@@ -6,8 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/openai/openai-go"
-
 	"go-agent-demo/agent"
 	"go-agent-demo/config"
 	"go-agent-demo/llm"
@@ -66,148 +64,252 @@ func main() {
 	toolRegistry := tools.NewRegistry()
 
 	// =========================================================
-	// 4. 创建 ContextManager
+	// 4. 创建 Long-term Memory
 	// =========================================================
-	prompt := `我之前主要在学习什么后端开发技术？`
-	// 	prompt := `
-	// 请帮我分析用户1001的订单10001。
-
-	// 需要查询：
-	// 1. 用户信息
-	// 2. 订单信息
-	// 3. 支付信息
-	// 4. 物流信息
-
-	// 最后请总结：
-	// - 用户是谁
-	// - 订单金额和状态
-	// - 支付状态
-	// - 物流状态
-	// `
-
-	promptMsg := openai.UserMessage(prompt)
-
-	ctxManager := memory.NewContextManager(
-		[]openai.ChatCompletionMessageParamUnion{
-			promptMsg,
-		},
-	)
+	//
+	// 注意：
+	//
+	// Long-term Memory 的生命周期比 ContextManager 长。
+	//
+	// 所以这里创建一次，后面两个 Session 共用。
+	//
+	// Session 1：
+	//
+	//     写入 Memory
+	//
+	// Session 2：
+	//
+	//     读取 Memory
+	//
+	// 这正是 Long-term Memory 的核心意义。
+	//
 
 	longTermMemory := memory.NewMemory()
 
 	// =========================================================
-	// 5. Memory Demo
+	// 5. Session 1
 	// =========================================================
-
-	testMemory(longTermMemory)
-
-	// return
-
-	// =========================================================
-	// 6. Workflow Demo
-	// =========================================================
-
-	// ---------------------------------------------------------
-	// 固定顺序 Workflow
-	// ---------------------------------------------------------
-
-	// fmt.Println()
-	// fmt.Println("===== Order Workflow =====")
-	// fmt.Println(workflow.RunOrderWorkflow())
-
-	// ---------------------------------------------------------
-	// Conditional Workflow
-	// ---------------------------------------------------------
-
-	// fmt.Println()
-	// fmt.Println("===== Conditional Workflow =====")
-	// fmt.Println(workflow.RunOrderWorkflow2())
-
-	// ---------------------------------------------------------
-	// Agentic Workflow
-	// ---------------------------------------------------------
-
-	// fmt.Println()
-	// fmt.Println("===== Agentic Workflow =====")
 	//
-	// result, err := workflow.RunAgenticWorkflow(
-	// 	ctx,
-	// 	&client,
-	// 	model,
-	// )
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	// 第一轮 Session：
 	//
-	// fmt.Println(result)
+	//     有自己的 ContextManager
+	//     有自己的 Agent
+	//
+	// 用户告诉 Agent：
+	//
+	//     我叫张三
+	//     我是一名 Go 后端开发工程师
+	//     我正在找 Go 后端开发相关的工作
+	//
+	// Agent 会通过 Memory Extraction
+	// 自动保存这些信息。
+	//
 
-	// =========================================================
-	// 7. 创建 Agent
-	// =========================================================
+	fmt.Println()
+	fmt.Println("=========================================================")
+	fmt.Println("                 Session 1")
+	fmt.Println("=========================================================")
 
-	agentRunner := agent.New(
+	// Session 1 的短期记忆
+	ctxManager1 := memory.NewContextManager(nil)
+
+	// Session 1 的 Agent
+	agent1 := agent.New(
 		&client,
 		model,
 		toolRegistry,
-		ctxManager,
+		ctxManager1,
+		longTermMemory,
+	)
+
+	session1Prompts := []string{
+		"我叫张三，我是一名 Go 后端开发工程师。",
+		"我最近主要想找 Go 后端开发相关的工作。",
+	}
+
+	for i, prompt := range session1Prompts {
+
+		fmt.Println()
+		fmt.Println("-----------------------------------------")
+		fmt.Printf("Session 1 - Turn %d\n", i+1)
+		fmt.Println("User:")
+		fmt.Println(prompt)
+		fmt.Println("-----------------------------------------")
+
+		answer, err := agent1.Chat(ctx, prompt)
+		if err != nil {
+			log.Printf(
+				"session 1 agent chat failed: %v",
+				err,
+			)
+			continue
+		}
+
+		fmt.Println()
+		fmt.Println("Agent:")
+		fmt.Println(answer)
+	}
+
+	// =========================================================
+	// 6. 查看 Session 1 产生的 Long-term Memory
+	// =========================================================
+
+	fmt.Println()
+	fmt.Println("=========================================================")
+	fmt.Println("       Long-term Memory After Session 1")
+	fmt.Println("=========================================================")
+
+	for _, item := range longTermMemory.All() {
+		fmt.Printf(
+			"%s = %s\n",
+			item.Key,
+			item.Value,
+		)
+	}
+
+	// =========================================================
+	// 7. Session 1 结束
+	// =========================================================
+	//
+	// 非常重要：
+	//
+	// 这里我们不再使用 agent1。
+	//
+	// 更准确地说：
+	//
+	//     ContextManager 1
+	//     Agent 1
+	//
+	// 都代表 Session 1。
+	//
+	// Session 2 将创建全新的 ContextManager。
+	//
+	// 但是：
+	//
+	//     longTermMemory
+	//
+	// 仍然保留。
+	//
+	// 因此：
+	//
+	//     Short-term Memory → 清空 / 换新
+	//
+	//     Long-term Memory  → 保留
+	//
+
+	fmt.Println()
+	fmt.Println("=========================================================")
+	fmt.Println("             Session 1 Finished")
+	fmt.Println("=========================================================")
+
+	// =========================================================
+	// 8. Session 2
+	// =========================================================
+	//
+	// 现在创建一个全新的 ContextManager。
+	//
+	// 它里面没有 Session 1 的任何聊天记录。
+	//
+	// 这意味着：
+	//
+	//     ctxManager2 != ctxManager1
+	//
+	// Session 2 的 Agent 也重新创建。
+	//
+	// 但是它们共享：
+	//
+	//     longTermMemory
+	//
+
+	fmt.Println()
+	fmt.Println("=========================================================")
+	fmt.Println("                 Session 2")
+	fmt.Println("=========================================================")
+
+	// 全新的短期记忆
+	ctxManager2 := memory.NewContextManager(nil)
+
+	// 全新的 Agent
+	//
+	// 注意：
+	//
+	// ContextManager 是新的
+	//
+	// Long-term Memory 是旧的
+	//
+	agent2 := agent.New(
+		&client,
+		model,
+		toolRegistry,
+		ctxManager2,
 		longTermMemory,
 	)
 
 	// =========================================================
-	// 8. 执行 Agent
+	// 9. Session 2 测试 Long-term Memory
+	// =========================================================
+	//
+	// 这里故意不再告诉 Agent：
+	//
+	//     我叫张三
+	//
+	//     我是一名 Go 后端开发工程师
+	//
+	// 而是直接询问 Memory 中的内容。
+	//
+	// 这样可以验证：
+	//
+	//     Session 2
+	//         ↓
+	//     没有 Session 1 的短期上下文
+	//         ↓
+	//     只能依赖 Long-term Memory
+	//
+
+	session2Prompts := []string{
+		"你还记得我的 职业 吗？",
+		"你还记得我的 我之前说过我想找什么工作吗？",
+		"你还记得我的 名字 吗？",
+		"你还记得我的 年龄 吗？",
+	}
+
+	for i, prompt := range session2Prompts {
+
+		fmt.Println()
+		fmt.Println("-----------------------------------------")
+		fmt.Printf("Session 2 - Turn %d\n", i+1)
+		fmt.Println("User:")
+		fmt.Println(prompt)
+		fmt.Println("-----------------------------------------")
+
+		answer, err := agent2.Chat(ctx, prompt)
+		if err != nil {
+			log.Printf(
+				"session 2 agent chat failed: %v",
+				err,
+			)
+			continue
+		}
+
+		fmt.Println()
+		fmt.Println("Agent:")
+		fmt.Println(answer)
+	}
+
+	// =========================================================
+	// 10. 最终 Long-term Memory
 	// =========================================================
 
-	_, err = agentRunner.Run(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// testMemory 演示简单的跨对话 Memory。
-func testMemory(m *memory.Memory) {
 	fmt.Println()
-	fmt.Println("===== Memory Demo =====")
+	fmt.Println("=========================================================")
+	fmt.Println("             Final Long-term Memory")
+	fmt.Println("=========================================================")
 
-	// =====================================================
-	// 第一轮对话：保存用户信息
-	// =====================================================
-
-	m.Save(
-		"user_name",
-		"张三",
-	)
-
-	m.Save(
-		"skill",
-		"Go 后端开发",
-	)
-
-	fmt.Println("Saved Memory:")
-
-	for _, item := range m.All() {
+	for _, item := range longTermMemory.All() {
 		fmt.Printf(
 			"%s = %s\n",
 			item.Key,
 			item.Value,
 		)
 	}
-
-	// =====================================================
-	// 第二轮对话：搜索相关记忆
-	// =====================================================
-
-	fmt.Println()
-	fmt.Println("Search Memory: Go")
-
-	results := m.Search("Go")
-
-	for _, item := range results {
-		fmt.Printf(
-			"%s = %s\n",
-			item.Key,
-			item.Value,
-		)
-	}
-
-	fmt.Println()
 }

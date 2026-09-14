@@ -18,8 +18,8 @@ func (a *Animal) setName(n string) { a.name = n }
 
 // Dog 继承 Animal（结构体组合 = has-a）
 type Dog struct {
-	*Animal      // 嵌入指针，自动获得 Animal 的方法
-	bark string
+	*Animal // 嵌入指针，自动获得 Animal 的方法
+	bark    string
 }
 
 // Speak 方法覆盖（多态）

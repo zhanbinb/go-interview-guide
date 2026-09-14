@@ -11,10 +11,10 @@ import (
 // ============================================================================
 // atomic 包提供的原子操作：
 //
-//   Add / Sub:        原子加减（int32/64, uint32/64）
-//   Load / Store:     原子读/写
-//   CAS (CompAndSwap):乐观锁核心
-//   Swap:             原子交换
+//	Add / Sub:        原子加减（int32/64, uint32/64）
+//	Load / Store:     原子读/写
+//	CAS (CompAndSwap):乐观锁核心
+//	Swap:             原子交换
 //
 // 底层：CPU 原子指令（如 x86 的 LOCK CMPXCHG）
 // 用途：替代简单类型的 Mutex，性能更好

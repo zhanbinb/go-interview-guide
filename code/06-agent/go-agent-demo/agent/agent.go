@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"go-agent-demo/llm"
+
 	"github.com/openai/openai-go"
 
 	"go-agent-demo/memory"
@@ -26,14 +28,17 @@ type Agent struct {
 	toolRegistry   *tools.Registry
 	contextManager *memory.ContextManager
 	longTermMemory *memory.Memory
+	queryRewriter  *QueryRewriter
 }
 
 // New 创建 Agent。
 func New(
 	client *openai.Client,
 	model string,
+
 	toolRegistry *tools.Registry,
 	contextManager *memory.ContextManager,
+
 	longTermMemory *memory.Memory,
 ) *Agent {
 	return &Agent{
@@ -42,7 +47,22 @@ func New(
 		toolRegistry:   toolRegistry,
 		contextManager: contextManager,
 		longTermMemory: longTermMemory,
+		queryRewriter:  NewQueryRewriter(client, model),
 	}
+}
+
+// Chat 开始一次新的用户对话。
+//
+// Chat 负责把用户输入加入当前 Context，
+// 然后交给 Agent.Run() 执行完整 Agent Loop。
+func (a *Agent) Chat(
+	ctx context.Context,
+	prompt string,
+) (string, error) {
+
+	a.contextManager.AddUserMessage(prompt)
+
+	return a.Run(ctx)
 }
 
 // Run 执行 Agent Loop。
@@ -93,7 +113,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 
 		query := a.contextManager.LastUserMessage()
 
-		memoryContext := a.buildMemoryContext(query)
+		memoryContext := a.buildMemoryContext(ctx, query)
 
 		if memoryContext != "" {
 			messages = append(
@@ -144,13 +164,28 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		// =====================================================
 
 		if len(message.ToolCalls) == 0 {
+			// 移除 <think>...</think> 标签
+			content := llm.CleanThinking(message.Content)
+
 			fmt.Println()
 			fmt.Println("================================")
 			fmt.Println("Final Answer:")
-			fmt.Println(message.Content)
+			fmt.Println(content)
 			fmt.Println("================================")
 
-			return message.Content, nil
+			// 当前轮对话已经完成。
+			//
+			// 现在让 LLM 判断：
+			// 用户刚才说的话中有没有值得长期保存的信息。
+			if err := a.extractAndSaveMemory(
+				ctx,
+				query,
+				content,
+			); err != nil {
+				log.Printf("memory extraction failed: %v", err)
+			}
+
+			return content, nil
 		}
 
 		// =====================================================

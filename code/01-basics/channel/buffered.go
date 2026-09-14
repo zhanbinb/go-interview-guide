@@ -10,9 +10,11 @@ import (
 //
 // ============================================================================
 // 关键认知：
-//   unbuffered (cap=0): 同步语义 — sender 阻塞直到有 receiver
-//   buffered  (cap=N):  异步语义 — 缓冲未满时 sender 不阻塞
-//   cap=1 特殊用法:     可当"信号量"（一次只允许一个 goroutine 持有）
+//
+//	unbuffered (cap=0): 同步语义 — sender 阻塞直到有 receiver
+//	buffered  (cap=N):  异步语义 — 缓冲未满时 sender 不阻塞
+//	cap=1 特殊用法:     可当"信号量"（一次只允许一个 goroutine 持有）
+//
 // ============================================================================
 func DemoBuffered() {
 	fmt.Println("=== buffered vs unbuffered channel ===")

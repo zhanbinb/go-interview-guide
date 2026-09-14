@@ -10,12 +10,12 @@ import (
 //
 // ============================================================================
 // 创建函数（context 包）：
-//   1. Background()             → 根 ctx，永远不取消
-//   2. TODO()                   → 占位 ctx，不知道用啥时
-//   3. WithCancel(parent)       → 手动 cancel
-//   4. WithTimeout(parent, d)   → 超时自动 cancel
-//   5. WithDeadline(parent, t)  → 到时间自动 cancel（= WithTimeout 到时间点）
-//   6. WithValue(parent, k, v)  → 存数据
+//  1. Background()             → 根 ctx，永远不取消
+//  2. TODO()                   → 占位 ctx，不知道用啥时
+//  3. WithCancel(parent)       → 手动 cancel
+//  4. WithTimeout(parent, d)   → 超时自动 cancel
+//  5. WithDeadline(parent, t)  → 到时间自动 cancel（= WithTimeout 到时间点）
+//  6. WithValue(parent, k, v)  → 存数据
 //
 // 面试问法："Context 怎么用？怎么取消？"
 func DemoFunctions() {

@@ -5,12 +5,13 @@ import "fmt"
 // DemoPassParam 演示 slice 作为函数参数传递
 //
 // 关键认知：
-//   Go 的参数传递是值传递，slice 也是值传递（slice header）
-//   不过 slice header 包含一个 ptr，ptr 指向的底层数组是共享的
-//   所以：
-//     - 函数内修改 s[i] 会影响外部（共享底层数组）
-//     - 函数内 append 不触发扩容不会影响外部
-//     - 函数内 append 触发扩容后修改不影响外部（新建了底层数组）
+//
+//	Go 的参数传递是值传递，slice 也是值传递（slice header）
+//	不过 slice header 包含一个 ptr，ptr 指向的底层数组是共享的
+//	所以：
+//	  - 函数内修改 s[i] 会影响外部（共享底层数组）
+//	  - 函数内 append 不触发扩容不会影响外部
+//	  - 函数内 append 触发扩容后修改不影响外部（新建了底层数组）
 func DemoPassParam() {
 	fmt.Println("=== slice 作为参数传递 ===")
 	fmt.Println()
@@ -71,7 +72,7 @@ func appendInPlace(s []int, v int) {
 // appendGrow append 一个元素，触发扩容
 func appendGrow(s []int, v int) {
 	s = append(s, v) // cap 不够，扩容
-	s[0] = 999 // 这次改的是新数组
+	s[0] = 999       // 这次改的是新数组
 }
 
 // appendAfter append 并返回新 slice

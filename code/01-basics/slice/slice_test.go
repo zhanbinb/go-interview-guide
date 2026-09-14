@@ -79,7 +79,7 @@ func TestParamShare(t *testing.T) {
 // TestParamNoAffect 验证函数内 append 扩容后不影响外部
 func TestParamNoAffect(t *testing.T) {
 	s := []int{1, 2, 3} // cap=3
-	appendBeyond(s)      // 触发扩容
+	appendBeyond(s)     // 触发扩容
 	if len(s) != 3 {
 		t.Errorf("expected len=3 (external unchanged), got %d", len(s))
 	}
@@ -88,12 +88,12 @@ func TestParamNoAffect(t *testing.T) {
 // TestExpandRules 验证扩容规则（append 足够多元素强制扩容）
 func TestExpandRules(t *testing.T) {
 	tests := []struct {
-		oldCap  int
-		minNew  int // 期望至少 >= 这个值
+		oldCap int
+		minNew int // 期望至少 >= 这个值
 	}{
-		{1, 2},   // 翻倍
-		{2, 4},   // 翻倍
-		{4, 8},   // 翻倍
+		{1, 2},     // 翻倍
+		{2, 4},     // 翻倍
+		{4, 8},     // 翻倍
 		{100, 200}, // 翻倍
 		{256, 320}, // 进入阶梯式
 		{512, 512}, // 阶梯式：约 1.25x

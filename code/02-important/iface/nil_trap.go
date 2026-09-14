@@ -14,6 +14,7 @@ import (
 // 这导致：
 //   - 函数返回 error 时，如果返回的是 (err *MyError)(nil)，调用方判断 err == nil 会出错
 //   - map 里查不存在的 key，返回 (zero, false) 不是 nil
+//
 // ============================================================================
 func DemoNilTrap() {
 	fmt.Println("=== nil 接口陷阱 ===")

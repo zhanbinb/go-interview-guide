@@ -8,9 +8,10 @@ import (
 // DemoLeak 演示大 slice 截取小 slice 导致的内存泄漏
 //
 // 经典场景：
-//   读一个大文件到 buf[:n]，n 很小
-//   buf 的 cap 是整个文件大小（比如 1GB）
-//   即使只用 buf[:10]，整个 1GB 也常驻内存（GC 不会回收）
+//
+//	读一个大文件到 buf[:n]，n 很小
+//	buf 的 cap 是整个文件大小（比如 1GB）
+//	即使只用 buf[:10]，整个 1GB 也常驻内存（GC 不会回收）
 //
 // 修复：append 到一个新的 slice 复制一份
 func DemoLeak() {

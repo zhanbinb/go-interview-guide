@@ -6,13 +6,14 @@ import "fmt"
 //
 // ============================================================================
 // 类型断言的语法：
-//   1. v := x.(T)             // 不安全，失败 panic
-//   2. v, ok := x.(T)         // 安全，ok=false 表示失败
-//   3. switch x.(type) { ... } // 类型 switch（只能用在 switch 里）
+//  1. v := x.(T)             // 不安全，失败 panic
+//  2. v, ok := x.(T)         // 安全，ok=false 表示失败
+//  3. switch x.(type) { ... } // 类型 switch（只能用在 switch 里）
 //
 // 类型断言 vs 类型转换：
 //   - x.(T): 运行期，x 必须是 interface
 //   - T(x):  编译期，类型必须兼容（int↔int64, []byte↔string）
+//
 // ============================================================================
 func DemoAssert() {
 	fmt.Println("=== 类型断言 ===")
@@ -70,10 +71,10 @@ func DemoAssert() {
 	// 实验 4：类型转换（编译期）
 	fmt.Println("【实验 4】类型转换 T(x) - 编译期")
 	var a int = 42
-	var b int64 = int64(a)   // int → int64（编译期 OK）
+	var b int64 = int64(a) // int → int64（编译期 OK）
 	fmt.Printf("  int(%d) → int64 = %d\n", a, b)
 	var c []byte = []byte("hello")
-	var s string = string(c)  // []byte → string
+	var s string = string(c) // []byte → string
 	fmt.Printf("  []byte → string = %q\n", s)
 	fmt.Println()
 

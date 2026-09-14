@@ -46,11 +46,12 @@ func Auth() Middleware {
 // DemoMiddleware 演示中间件洋葱模型
 //
 // 中间件洋葱模型：
-//   Logger: START
-//     Auth: 检查 token
-//       Handler: 业务逻辑
-//     Auth: 清理
-//   Logger: END
+//
+//	Logger: START
+//	  Auth: 检查 token
+//	    Handler: 业务逻辑
+//	  Auth: 清理
+//	Logger: END
 //
 // 顺序：外层 → 内层 → 业务 → 内层清理 → 外层清理
 func DemoMiddleware() {

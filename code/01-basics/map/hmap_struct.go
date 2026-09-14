@@ -12,22 +12,23 @@ import (
 // Go 1.23 及之前用老实现（hmap + bmap + 链表式溢出 bucket）
 //
 // 老实现（hmap）大致结构（仅供了解，Go 1.25 已不适用）：
-//   type hmap struct {
-//       count     int               // 元素数（len() 读这个）
-//       B         uint8             // log_2(buckets 数)，bucket 数 = 2^B
-//       flags     uint8             // iterator / hashWriting 等标志
-//       noverflow uint16            // 溢出 bucket 数量
-//       hash0     uint32            // 随机哈希种子（防 HashDoS）
-//       buckets    unsafe.Pointer   // bucket 数组
-//       oldbuckets unsafe.Pointer   // 扩容时的旧 bucket
-//       ...
-//   }
-//   type bmap struct {
-//       tophash [8]uint8            // 哈希高 8 位（快速比较）
-//       keys    [8]K
-//       values  [8]V
-//       overflow *bmap              // 溢出 bucket 链
-//   }
+//
+//	type hmap struct {
+//	    count     int               // 元素数（len() 读这个）
+//	    B         uint8             // log_2(buckets 数)，bucket 数 = 2^B
+//	    flags     uint8             // iterator / hashWriting 等标志
+//	    noverflow uint16            // 溢出 bucket 数量
+//	    hash0     uint32            // 随机哈希种子（防 HashDoS）
+//	    buckets    unsafe.Pointer   // bucket 数组
+//	    oldbuckets unsafe.Pointer   // 扩容时的旧 bucket
+//	    ...
+//	}
+//	type bmap struct {
+//	    tophash [8]uint8            // 哈希高 8 位（快速比较）
+//	    keys    [8]K
+//	    values  [8]V
+//	    overflow *bmap              // 溢出 bucket 链
+//	}
 //
 // Swiss Table 实现（Go 1.24+ 默认）：
 //   - 开放寻址（不用链地址）
@@ -39,6 +40,7 @@ import (
 //   - 老实现：哈希冲突 → 链表 → 扩容 → 负载因子 6.5
 //   - 新实现：开放寻址 + control byte + 性能更好
 //   - 两种实现对外接口完全一样
+//
 // ============================================================================
 func DemoHmapStruct() {
 	fmt.Println("=== map 内部结构（行为层面）===")

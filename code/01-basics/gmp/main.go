@@ -1,9 +1,10 @@
 // GMP 调度模型演示入口
 //
 // 运行方式:
-//   go run .                              # 列出所有 demo
-//   go run . <demo-name>                  # 运行指定 demo
-//   GODEBUG=schedtrace=1000 go run . ...  # 观察调度 trace
+//
+//	go run .                              # 列出所有 demo
+//	go run . <demo-name>                  # 运行指定 demo
+//	GODEBUG=schedtrace=1000 go run . ...  # 观察调度 trace
 package main
 
 import (

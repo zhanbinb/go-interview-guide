@@ -11,13 +11,15 @@ import (
 //
 // ============================================================================
 // 什么是 channel 泄漏？
-//   goroutine 因为 channel 操作永久阻塞，无法退出 → goroutine 泄漏 → 内存泄漏
+//
+//	goroutine 因为 channel 操作永久阻塞，无法退出 → goroutine 泄漏 → 内存泄漏
 //
 // 4 种典型场景：
-//   1. 发送方阻塞：goroutine 发送数据到无缓冲 channel，但无 receiver
-//   2. 接收方阻塞：goroutine 从 channel 接收，但 sender 早早 return
-//   3. buffered channel 持续生产，无人消费
-//   4. goroutine 等永远不会被关闭/取消的 channel
+//  1. 发送方阻塞：goroutine 发送数据到无缓冲 channel，但无 receiver
+//  2. 接收方阻塞：goroutine 从 channel 接收，但 sender 早早 return
+//  3. buffered channel 持续生产，无人消费
+//  4. goroutine 等永远不会被关闭/取消的 channel
+//
 // ============================================================================
 func DemoLeak() {
 	fmt.Println("=== Channel 泄漏演示 ===")

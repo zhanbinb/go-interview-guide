@@ -4,9 +4,9 @@ import "fmt"
 
 // mockTx 模拟事务（带快照回滚）
 type mockTx struct {
-	db       *mockDB
-	snapshot map[string][]map[string]any
-	commits  int
+	db        *mockDB
+	snapshot  map[string][]map[string]any
+	commits   int
 	rollbacks int
 }
 

@@ -5,10 +5,10 @@ import "fmt"
 // DemoVsJava 演示 Go vs Java 的核心区别
 //
 // 核心对比：
-//   1. 部署：Go 单二进制 vs Java 需 JVM
-//   2. 并发：goroutine vs thread
-//   3. 类型：接口隐式 vs implements
-//   4. 生态：Java 成熟 vs Go 云原生
+//  1. 部署：Go 单二进制 vs Java 需 JVM
+//  2. 并发：goroutine vs thread
+//  3. 类型：接口隐式 vs implements
+//  4. 生态：Java 成熟 vs Go 云原生
 func DemoVsJava() {
 	fmt.Println("=== Go vs Java ===")
 	fmt.Println()

@@ -11,23 +11,24 @@ import (
 //
 // Go 1.25 的 hchan 定义：
 //
-//   qcount   uint           // 0
-//   dataqsiz uint           // 8
-//   buf      unsafe.Pointer // 16
-//   elemsize uint16         // 24
-//   closed   uint32         // 26
-//   timer    *timer         // 32 (Go 1.25+ 新增)
-//   elemtype *_type         // 40
-//   sendx    uint           // 48
-//   recvx    uint           // 56
-//   recvq    waitq          // 64
-//   sendq    waitq          // 80
-//   bubble   *synctestBubble// 96
-//   lock     mutex          // 104
+//	qcount   uint           // 0
+//	dataqsiz uint           // 8
+//	buf      unsafe.Pointer // 16
+//	elemsize uint16         // 24
+//	closed   uint32         // 26
+//	timer    *timer         // 32 (Go 1.25+ 新增)
+//	elemtype *_type         // 40
+//	sendx    uint           // 48
+//	recvx    uint           // 56
+//	recvq    waitq          // 64
+//	sendq    waitq          // 80
+//	bubble   *synctestBubble// 96
+//	lock     mutex          // 104
 //
 // ⚠️ unsafe 代码依赖 Go runtime 内部布局！
-//   升级 Go 版本前要先核对 runtime/chan.go 里的字段顺序
-//   不同 Go 版本字段顺序可能不同（如 Go 1.25 加了 timer 字段）
+//
+//	升级 Go 版本前要先核对 runtime/chan.go 里的字段顺序
+//	不同 Go 版本字段顺序可能不同（如 Go 1.25 加了 timer 字段）
 type hchanField struct {
 	name   string
 	offset uintptr
@@ -41,7 +42,7 @@ var hchanFields = []hchanField{
 	{"dataqsiz", 8, 8, "uint"},
 	{"buf", 16, 8, "unsafe.Pointer"},
 	{"elemsize", 24, 2, "uint16"},
-	{"closed", 28, 4, "uint32"},  // 注意: elemsize 后有 2 字节 padding
+	{"closed", 28, 4, "uint32"}, // 注意: elemsize 后有 2 字节 padding
 	{"timer", 32, 8, "*timer (1.25+)"},
 	{"elemtype", 40, 8, "*_type"},
 	{"sendx", 48, 8, "uint"},

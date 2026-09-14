@@ -7,14 +7,15 @@ import "fmt"
 // ============================================================================
 // recover 用法：
 //
-//   1. 基本用法：捕获 panic，程序继续
-//   2. re-panic：恢复后重新 panic（保留堆栈，让上层处理）
-//   3. 库代码：用 named return + defer recover 包装错误
+//  1. 基本用法：捕获 panic，程序继续
+//  2. re-panic：恢复后重新 panic（保留堆栈，让上层处理）
+//  3. 库代码：用 named return + defer recover 包装错误
 //
 // 关键规则：
 //   - recover 必须在 defer 里才生效
 //   - recover 只能捕获当前 goroutine 的 panic
 //   - recover 后函数返回零值（正常流程）
+//
 // ============================================================================
 func DemoRecover() {
 	fmt.Println("=== recover 用法 ===")

@@ -13,12 +13,14 @@ import (
 // 主要负责：
 // 1. 保存历史消息
 // 2. 保存摘要
-// 3. 控制上下文长度
-// 4. 在上下文过长时触发摘要
-// 5. 构造最终发送给 LLM 的 Messages
+// 3. 保存当前用户 Query
+// 4. 控制上下文长度
+// 5. 在上下文过长时触发摘要
+// 6. 构造最终发送给 LLM 的 Messages
 type ContextManager struct {
-	messages []openai.ChatCompletionMessageParamUnion
-	summary  string
+	messages      []openai.ChatCompletionMessageParamUnion
+	summary       string
+	lastUserQuery string
 }
 
 // NewContextManager 创建 ContextManager。
@@ -26,7 +28,10 @@ func NewContextManager(
 	initialMessages []openai.ChatCompletionMessageParamUnion,
 ) *ContextManager {
 	cm := &ContextManager{
-		messages: make([]openai.ChatCompletionMessageParamUnion, 0),
+		messages: make(
+			[]openai.ChatCompletionMessageParamUnion,
+			0,
+		),
 	}
 
 	cm.messages = append(cm.messages, initialMessages...)
@@ -44,11 +49,27 @@ func (cm *ContextManager) GetSummary() string {
 	return cm.summary
 }
 
-// Add 添加一条消息。
+// Add 添加一条普通消息。
 func (cm *ContextManager) Add(
 	msg openai.ChatCompletionMessageParamUnion,
 ) {
 	cm.messages = append(cm.messages, msg)
+}
+
+// AddUserMessage 添加一条用户消息。
+//
+// 除了保存到 messages，
+// 还会记录当前用户 Query，
+// 供 Query Rewrite / Memory Retrieval / Memory Extraction 使用。
+func (cm *ContextManager) AddUserMessage(
+	content string,
+) {
+	cm.messages = append(
+		cm.messages,
+		openai.UserMessage(content),
+	)
+
+	cm.lastUserQuery = content
 }
 
 // Messages 获取当前历史消息。
@@ -80,6 +101,8 @@ func (cm *ContextManager) Summarize(
 		return nil
 	}
 
+	// 将当前对话消息转换成 JSON，
+	// 方便 LLM 理解每条消息的 role / content / tool call 等信息。
 	data, err := json.Marshal(cm.messages)
 	if err != nil {
 		return fmt.Errorf("marshal messages: %w", err)
@@ -119,7 +142,13 @@ func (cm *ContextManager) Summarize(
 
 	cm.summary = resp.Choices[0].Message.Content
 
-	// 摘要完成后清空历史消息。
+	// 摘要完成后清空短期历史消息。
+	//
+	// 注意：
+	// lastUserQuery 不清空。
+	// 因为它代表当前正在处理的用户 Query，
+	// Query Rewrite / Memory Retrieval / Memory Extraction
+	// 仍然需要使用它。
 	cm.messages = nil
 
 	return nil
@@ -146,7 +175,7 @@ func (cm *ContextManager) MaybeSummarize(
 //
 // 如果存在 summary，则：
 //
-//	用户摘要
+//	历史摘要
 //	+ 最近消息
 //
 // 一起发送给 LLM。
@@ -174,26 +203,10 @@ func (cm *ContextManager) BuildMessages() []openai.ChatCompletionMessageParamUni
 	return messages
 }
 
+// LastUserMessage 返回最近一次用户输入。
+//
+// 不再从 openai.ChatCompletionMessageParamUnion 中解析，
+// 而是直接返回 AddUserMessage() 保存的当前 Query。
 func (cm *ContextManager) LastUserMessage() string {
-	for i := len(cm.messages) - 1; i >= 0; i-- {
-		data, err := json.Marshal(cm.messages[i])
-		if err != nil {
-			continue
-		}
-
-		var message struct {
-			Role    string `json:"role"`
-			Content string `json:"content"`
-		}
-
-		if err := json.Unmarshal(data, &message); err != nil {
-			continue
-		}
-
-		if message.Role == "user" {
-			return message.Content
-		}
-	}
-
-	return ""
+	return cm.lastUserQuery
 }

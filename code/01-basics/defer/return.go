@@ -16,7 +16,7 @@ func DemoReturnValue() {
 	anon := func() int {
 		ret := 1
 		defer func() { ret = 999 }() // 改的是局部 ret
-		return ret // return value = 1（拷贝）
+		return ret                   // return value = 1（拷贝）
 	}
 	fmt.Printf("匿名返回值: %d (defer 改的是副本)\n", anon())
 
@@ -24,7 +24,7 @@ func DemoReturnValue() {
 	named := func() (ret int) {
 		ret = 1
 		defer func() { ret = 999 }() // 改的是命名返回值 ret
-		return // 等价 return ret
+		return                       // 等价 return ret
 	}
 	fmt.Printf("命名返回值: %d (defer 改的是原变量)\n", named())
 

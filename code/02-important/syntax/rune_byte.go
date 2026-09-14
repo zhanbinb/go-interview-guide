@@ -12,8 +12,8 @@ func DemoRuneByte() {
 
 	// byte vs rune
 	fmt.Println("【实验 1】byte vs rune")
-	var b byte = 'A'        // byte = uint8
-	var r rune = '中'        // rune = int32
+	var b byte = 'A' // byte = uint8
+	var r rune = '中' // rune = int32
 	fmt.Printf("  byte = 'A':   类型=%T, 大小=%d 字节, 值=%d\\n", b, 1, b)
 	fmt.Printf("  rune = '中':  类型=%T, 大小=%d 字节, 值=%d (Unicode 码点)\\n", r, 4, r)
 	fmt.Println()

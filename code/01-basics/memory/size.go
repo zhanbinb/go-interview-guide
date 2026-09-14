@@ -11,13 +11,14 @@ import (
 // ============================================================================
 // 对象大小分类（runtime/sizeclasses.go）：
 //
-//   微对象 <16B      → mcache tiny allocator（无 size class 概念）
-//   小对象 16B-32KB   → 67 种 size class，按大小分配 span
-//   大对象 ≥32KB     → 直接 mheap，按页对齐（不通过 size class）
+//	微对象 <16B      → mcache tiny allocator（无 size class 概念）
+//	小对象 16B-32KB   → 67 种 size class，按大小分配 span
+//	大对象 ≥32KB     → 直接 mheap，按页对齐（不通过 size class）
 //
 // 为什么区分？
 //   - 小对象复用 span，零碎片，分配快
 //   - 大对象按页对齐，避免浪费空间
+//
 // ============================================================================
 func DemoSizeClass() {
 	fmt.Println("=== 大对象 vs 小对象 ===")
@@ -36,7 +37,7 @@ func DemoSizeClass() {
 		}
 		_ = s
 	}
-	for _, n := range []int{8, 16, 100, 1024, 10*1024, 100*1024} {
+	for _, n := range []int{8, 16, 100, 1024, 10 * 1024, 100 * 1024} {
 		showClass(n)
 	}
 	fmt.Println()

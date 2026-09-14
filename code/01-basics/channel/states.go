@@ -9,19 +9,24 @@ import (
 // DemoStates 演示 channel 的 3 状态 × 3 操作行为矩阵
 //
 // 状态：
-//   nil channel     — var ch chan int
-//   open channel    — make(chan int) 或 make(chan int, N)
-//   closed channel  — close(ch) 之后
+//
+//	nil channel     — var ch chan int
+//	open channel    — make(chan int) 或 make(chan int, N)
+//	closed channel  — close(ch) 之后
 //
 // 操作：读 (<-ch) / 写 (ch<-) / close(ch)
 //
 // ============================================================================
-//                 │  nil channel  │  open channel   │  closed channel
+//
+//	│  nil channel  │  open channel   │  closed channel
+//
 // ────────────────┼───────────────┼─────────────────┼──────────────────
 // <-ch (读)       │ 永久阻塞       │ 阻塞/拿到值      │ 立即返回零值, ok=false
 // ch<- (写)       │ 永久阻塞       │ 阻塞/写入成功    │ PANIC send on closed
 // close(ch)       │ PANIC close   │ 关闭成功         │ PANIC close of closed
-//                  │   of nil     │                  │
+//
+//	│   of nil     │                  │
+//
 // ============================================================================
 func DemoStates() {
 	fmt.Println("=== Channel 3 状态 × 3 操作行为矩阵 ===")

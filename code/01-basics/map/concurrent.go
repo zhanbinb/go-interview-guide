@@ -9,13 +9,14 @@ import (
 // DemoConcurrent 演示 map 并发访问的 fatal error 和 3 种解决方案
 //
 // 原生 map 不是并发安全的：
-//   并发写（含一个写 + 一个读）会触发 fatal error: concurrent map writes
-//   这是运行时主动检测的，触发后整个程序崩溃
+//
+//	并发写（含一个写 + 一个读）会触发 fatal error: concurrent map writes
+//	这是运行时主动检测的，触发后整个程序崩溃
 //
 // 3 种解决方案：
-//   1. sync.Mutex + map       通用，写频繁也可以
-//   2. sync.RWMutex + map     读多写少
-//   3. sync.Map               key 集合稳定 + 读多写少（专用优化）
+//  1. sync.Mutex + map       通用，写频繁也可以
+//  2. sync.RWMutex + map     读多写少
+//  3. sync.Map               key 集合稳定 + 读多写少（专用优化）
 func DemoConcurrent() {
 	fmt.Println("=== map 并发安全 ===")
 	fmt.Println()

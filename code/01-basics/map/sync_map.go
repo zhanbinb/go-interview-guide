@@ -16,9 +16,10 @@ import (
 //   - 当 dirty 被"提升"为 read 时，需要双倍内存
 //
 // 适用场景：
-//   ✅ key 集合稳定（写少 + key 不变）
-//   ✅ 读极多写少（10:1 以上）
-//   ❌ key 集合频繁变化（dirty map 升级成本高）
+//
+//	✅ key 集合稳定（写少 + key 不变）
+//	✅ 读极多写少（10:1 以上）
+//	❌ key 集合频繁变化（dirty map 升级成本高）
 func DemoSyncMap() {
 	fmt.Println("=== sync.Map vs RWMutex + map ===")
 	fmt.Println()

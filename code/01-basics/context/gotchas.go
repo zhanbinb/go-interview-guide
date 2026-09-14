@@ -41,7 +41,7 @@ func DemoGotchas() {
 	// ---------- 陷阱 3：ctx 放进结构体 ----------
 	fmt.Println("【陷阱 3】把 ctx 放进结构体")
 	type BadStruct struct {
-		ctx context.Context // ⚠️ 不要这样
+		ctx  context.Context // ⚠️ 不要这样
 		data string
 	}
 	_ = BadStruct{}

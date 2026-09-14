@@ -78,7 +78,6 @@ func TestTypeSwitch(t *testing.T) {
 	}
 }
 
-
 // TestPolymorphism 验证多态（复用 polymorphism.go 里定义的类型）
 func TestPolymorphism(t *testing.T) {
 	var s Speaker = Dog{Name: "test"}
