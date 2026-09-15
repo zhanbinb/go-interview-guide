@@ -3,7 +3,7 @@
 > 🎯 目标：系统性地概览 Agent 开发，建立全景认知
 > 📚 假设：已有 Go 后端基础，正在准备面试
 > ⏱️ 时间预算：12 步，约 13.5 小时（不含已完成部分）
-> 📅 路线版本：v3（Step 6/7 已完成，进入 Step 8 Memory）
+> 📅 路线版本：v5（新增 MCP + Router，已完成工具调用标准化和能力路由）
 
 ---
 
@@ -92,17 +92,18 @@
 
 ---
 
-#### **Step 8 · Memory**（2h）
+#### **Step 8 · Memory**（2h）✅ 已完成
 
 **核心问题**：怎么让 Agent **跨会话**"记住"东西？
 
-**学什么**：
-- 短期记忆：messages 历史（已会）
-- 长期记忆：checkpointer / store（LangGraph 概念）
-- 事实抽取：让 LLM 自动从对话中提取关键信息（如"用户喜欢简洁回答"）
-- **RAG 作为 Memory 的一种实现方式**（不单独展开，需要时再深入）
+**学了什么**：
+- 长期记忆：key-value + 向量双存储
+- 事实抽取：让 LLM 自动从对话中提取关键信息
+- Hybrid Search：Keyword (10/5/2 打分) + Vector (Cosine Similarity)
+- Query Rewrite：用 LLM 把自然语言转换为检索关键词
+- RAG 完整链路：KnowledgeBase + Retriever + Ask
 
-**怎么学**：用 LangGraph 的 `MemorySaver` 或自己写一个文件 checkpointer
+**笔记**：[notes/memory.md](notes/memory.md) + [notes/query-rewrite.md](notes/query-rewrite.md) + [notes/embedding-vector-search.md](notes/embedding-vector-search.md) + [notes/rag.md](notes/rag.md)
 
 ---
 
@@ -298,8 +299,8 @@ export ANTHROPIC_API_KEY=sk-ant-...
 | 5 | Agent Loop（ReAct） | ✅ | Day 1 Demo |
 | **6** | **Context Management** | ✅ | [笔记](notes/context-management.md) |
 | 7 | Agent 编排模式 | ✅ | [笔记](notes/agent-orchestration.md) |
-| **8** | **Memory** | ⬜ | **🎯 下一步** · [预览](notes/memory-preview.md) |
-| 9 | MCP | ⬜ | |
+| **8** | **Memory** | ✅ | [笔记](notes/memory.md) |
+| 9 | MCP + Router | ✅ | [笔记](notes/mcp.md) + [笔记](notes/router.md) |
 | 10 | Multi-Agent | ⬜ | |
 | 11 | Evaluation | ⬜ | |
 | 12 | Agent 工程化 | ⬜ | |
@@ -310,18 +311,43 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 按主题整理的深度笔记，配合代码一起看：
 
-| 笔记 | 内容 | 状态 |
-|------|------|------|
-| [notes/refactoring.md](notes/refactoring.md) | 项目重构：从单文件 main.go 到模块化 | ✅ |
-| [notes/context-management.md](notes/context-management.md) | Step 6 · ContextManager 实现与权衡 | ✅ |
-| [notes/agent-orchestration.md](notes/agent-orchestration.md) | Step 7 · 三种 Workflow 编排模式 | ✅ |
-| [notes/memory-preview.md](notes/memory-preview.md) | Step 8 · Memory 预备与局限 | ⬜ |
+### 架构总览
+- [notes/agent-architecture.md](notes/agent-architecture.md) — **Router + 3 大支柱 + Harness 视角**（建议先看）
+
+### Step 6-7 笔记
+- [notes/refactoring.md](notes/refactoring.md) — 项目重构记录
+- [notes/context-management.md](notes/context-management.md) — Step 6 Context Management
+- [notes/agent-orchestration.md](notes/agent-orchestration.md) — Step 7 Agent 编排
+
+### Step 8 笔记
+- [notes/memory.md](notes/memory.md) — Memory 完整体系
+- [notes/query-rewrite.md](notes/query-rewrite.md) — Query Rewrite
+- [notes/embedding-vector-search.md](notes/embedding-vector-search.md) — Embedding & 向量检索
+- [notes/rag.md](notes/rag.md) — RAG 完整链路
+
+### Step 9 笔记（今天新完成）
+- [notes/router.md](notes/router.md) — **Router 能力路由**（新增架构思想）
+- [notes/mcp.md](notes/mcp.md) — **MCP 详解**（含独立 SDK Demo + 主项目集成）
+
+**完整索引**：[notes/README.md](notes/README.md)
 
 ## 11. 下一步
 
-**Step 8 · Memory** —— 离你当前代码最近、改动最小、收益最大
+**Step 10 · Multi-Agent** —— 多个 Agent 协作完成复杂任务
 
-可以告诉我「开始 Step 8」，我会帮你：
-- 把当前 `Memory` 升级为支持跨进程持久化（Redis / 文件）
-- 加 user_id 区分不同用户的 Memory
-- 加一个简单的事实抽取 demo（让 LLM 从对话中自动提取 key-value）
+可以告诉我「开始 Step 10」，我会帮你：
+- 理解 Supervisor / Swarm 两种多 Agent 架构
+- 跑一个 CrewAI 或 AutoGen 的最小 Demo
+- 把现有 Agent 改造成可被 Supervisor 调用的 Worker
+
+**路线完整度**：
+```
+✅ Step 1-5  基础（LLM / Tool / Loop）
+✅ Step 6    Context Management
+✅ Step 7    Agent 编排
+✅ Step 8    Memory + RAG + Embedding + Query Rewrite
+✅ Step 9    MCP + Router（能力路由 + 工具标准化）
+⬜ Step 10   Multi-Agent
+⬜ Step 11   Evaluation
+⬜ Step 12   Agent 工程化
+```

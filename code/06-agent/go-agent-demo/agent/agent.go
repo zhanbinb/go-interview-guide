@@ -2,32 +2,41 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 
 	"go-agent-demo/llm"
+	"go-agent-demo/memory"
 	"go-agent-demo/rag"
+	"go-agent-demo/tools"
+
+	mcpclient "go-agent-demo/mcp/client"
 
 	"github.com/openai/openai-go"
-
-	"go-agent-demo/memory"
-	"go-agent-demo/tools"
 )
 
 // Agent 是 Agent Loop 的核心执行器。
 //
 // Agent 负责：
-// 1. 调用 LLM
-// 2. 判断 LLM 是否要求调用 Tool
-// 3. 执行 Tool
-// 4. 将 Tool Result 放回上下文
-// 5. 循环调用 LLM
-// 6. 最终得到 Final Answer
+// 1. 调用 Router 判断当前问题需要哪些能力
+// 2. 调用 LLM
+// 3. 判断 LLM 是否要求调用 Tool
+// 4. 执行 Tool
+// 5. 将 Tool Result 放回上下文
+// 6. 循环调用 LLM
+// 7. 最终得到 Final Answer
 type Agent struct {
-	client         *openai.Client
-	model          string
+	client *openai.Client
+	model  string
+
+	// Router 负责判断当前用户问题需要哪些能力：
+	// Memory / RAG / Tools
+	router *Router
+
 	toolRegistry   *tools.Registry
+	mcpClient      *mcpclient.Client
 	contextManager *memory.ContextManager
 	longTermMemory *memory.Memory
 	queryRewriter  *QueryRewriter
@@ -38,15 +47,19 @@ type Agent struct {
 func New(
 	client *openai.Client,
 	model string,
+	router *Router,
 	toolRegistry *tools.Registry,
 	contextManager *memory.ContextManager,
 	longTermMemory *memory.Memory,
 	queryRewriter *QueryRewriter,
 	ragService *rag.RAG,
+	mcpClient *mcpclient.Client,
 ) *Agent {
 	return &Agent{
 		client: client,
 		model:  model,
+
+		router: router,
 
 		toolRegistry:   toolRegistry,
 		contextManager: contextManager,
@@ -54,7 +67,8 @@ func New(
 		longTermMemory: longTermMemory,
 		queryRewriter:  queryRewriter,
 
-		rag: ragService,
+		rag:       ragService,
+		mcpClient: mcpClient,
 	}
 }
 
@@ -74,11 +88,20 @@ func (a *Agent) Chat(
 
 // Run 执行 Agent Loop。
 //
-// 基本流程：
+// 整体流程：
 //
-//	User Message
+//	User Query
 //	    ↓
-//	LLM
+//	 Router
+//	    ↓
+//	Route Decision
+//	   / | \
+//	  /  |  \
+//	Memory RAG Tools
+//	  \   |   /
+//	   \  |  /
+//	    ↓
+//	   LLM
 //	    ↓
 //	是否需要 Tool？
 //	   /     \
@@ -92,13 +115,119 @@ func (a *Agent) Chat(
 //	  ↓
 //	...
 func (a *Agent) Run(ctx context.Context) (string, error) {
-	// Tool Schema 告诉 LLM：
-	// 当前 Agent 有哪些 Tool 可以调用。
-	toolDefinitions := BuildToolDefinitions()
+
+	// =====================================================
+	// 1. Router
+	//
+	// Router 只针对当前 User Query 判断一次。
+	//
+	// 注意：
+	// Router 不应该放到下面的 Agent Loop for 中。
+	//
+	// 因为 Tool Call -> Tool Result -> LLM
+	// 都属于同一次用户请求。
+	// =====================================================
+
+	query := a.contextManager.LastUserMessage()
+
+	decision, err := a.router.Decide(
+		ctx,
+		query,
+		BuildCapabilities(),
+	)
+	if err != nil {
+		return "", fmt.Errorf(
+			"router decide: %w",
+			err,
+		)
+	}
+
+	fmt.Println()
+	fmt.Println("Router Decision:")
+	fmt.Printf(
+		"Memory=%v, RAG=%v, Tool=%v\n",
+		decision.UseMemory,
+		decision.UseRAG,
+		decision.UseTool,
+	)
+
+	// =====================================================
+	// 2. 根据 Router Decision 准备能力
+	// =====================================================
+	//
+	// Router 只是做决定。
+	//
+	// 真正执行能力的是 Agent：
+	//
+	// UseMemory=true
+	//        ↓
+	// buildMemoryContext()
+	//
+	// UseRAG=true
+	//        ↓
+	// buildRAGContext()
+	//
+	// UseTool=true
+	//        ↓
+	// 给 LLM 提供 Tool Schema
+	// =====================================================
+
+	var memoryContext string
+
+	if decision.UseMemory {
+		memoryContext = a.buildMemoryContext(
+			ctx,
+			query,
+		)
+	}
+
+	var ragContext string
+
+	if decision.UseRAG {
+		ragContext, err = a.buildRAGContext(
+			ctx,
+			query,
+		)
+		if err != nil {
+			return "", fmt.Errorf(
+				"build rag context: %w",
+				err,
+			)
+		}
+	}
+
+	// =====================================================
+	// 3. 根据 Router Decision 决定是否向 LLM 提供 Tool
+	// =====================================================
+
+	var toolDefinitions []openai.ChatCompletionToolParam
+
+	if decision.UseTool {
+		toolDefinitions = BuildToolDefinitions()
+
+		if a.mcpClient != nil {
+			mcpTools, err := a.mcpClient.ListTools(ctx)
+			if err != nil {
+				return "", fmt.Errorf("list MCP tools failed: %w", err)
+			}
+
+			mcpDefinitions := mcpclient.ConvertTools(mcpTools)
+
+			toolDefinitions = append(
+				toolDefinitions,
+				mcpDefinitions...,
+			)
+		}
+	}
+
+	// =====================================================
+	// 4. Agent Loop
+	// =====================================================
 
 	for {
+
 		// =====================================================
-		// 1. 检查 Context 是否需要摘要
+		// 4.1 检查 Context 是否需要摘要
 		// =====================================================
 
 		if err := a.contextManager.MaybeSummarize(
@@ -113,24 +242,22 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		}
 
 		// =====================================================
-		// 2. 构造当前上下文
+		// 4.2 构造当前上下文
 		// =====================================================
 
 		messages := a.contextManager.BuildMessages()
 
-		query := a.contextManager.LastUserMessage()
-
-		memoryContext := a.buildMemoryContext(ctx, query)
-		ragContext, err := a.buildRAGContext(ctx, query)
-		if err != nil {
-			return "", fmt.Errorf("build rag context: %w", err)
-		}
+		// 如果 Router 判断需要 RAG，
+		// 则把 RAG 检索结果加入当前上下文。
 		if ragContext != "" {
 			messages = append(
 				messages,
 				openai.UserMessage(ragContext),
 			)
 		}
+
+		// 如果 Router 判断需要 Memory，
+		// 则把长期记忆加入当前上下文。
 		if memoryContext != "" {
 			messages = append(
 				messages,
@@ -139,7 +266,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		}
 
 		// =====================================================
-		// 3. 调用 LLM
+		// 4.3 调用 LLM
 		// =====================================================
 
 		resp, err := a.client.Chat.Completions.New(
@@ -147,7 +274,12 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 			openai.ChatCompletionNewParams{
 				Model:    a.model,
 				Messages: messages,
-				Tools:    toolDefinitions,
+
+				// 如果 Router 判断不需要 Tool，
+				// 这里就是 nil。
+				//
+				// LLM 就不会知道当前 Agent 有哪些 Tool。
+				Tools: toolDefinitions,
 			},
 		)
 		if err != nil {
@@ -166,7 +298,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		message := resp.Choices[0].Message
 
 		// =====================================================
-		// 4. 保存 Assistant Message
+		// 4.4 保存 Assistant Message
 		// =====================================================
 
 		a.contextManager.Add(
@@ -174,14 +306,17 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		)
 
 		// =====================================================
-		// 5. 没有 Tool Call
+		// 4.5 没有 Tool Call
 		//
 		// 说明 LLM 已经可以直接回答用户。
 		// =====================================================
 
 		if len(message.ToolCalls) == 0 {
+
 			// 移除 <think>...</think> 标签
-			content := llm.CleanThinking(message.Content)
+			content := llm.CleanThinking(
+				message.Content,
+			)
 
 			fmt.Println()
 			fmt.Println("================================")
@@ -189,28 +324,35 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 			fmt.Println(content)
 			fmt.Println("================================")
 
+			// =================================================
 			// 当前轮对话已经完成。
 			//
-			// 现在让 LLM 判断：
+			// 让 LLM 判断：
 			// 用户刚才说的话中有没有值得长期保存的信息。
+			// =================================================
+
 			if err := a.extractAndSaveMemory(
 				ctx,
 				query,
 				content,
 			); err != nil {
-				log.Printf("memory extraction failed: %v", err)
+				log.Printf(
+					"memory extraction failed: %v",
+					err,
+				)
 			}
 
 			return content, nil
 		}
 
 		// =====================================================
-		// 6. 处理 Tool Calls
+		// 4.6 处理 Tool Calls
 		//
 		// 一次 Assistant Message 可能要求调用多个 Tool。
 		// =====================================================
 
 		for _, toolCall := range message.ToolCalls {
+
 			toolName := toolCall.Function.Name
 			arguments := toolCall.Function.Arguments
 
@@ -220,59 +362,127 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 			fmt.Println("Arguments:", arguments)
 
 			// -------------------------------------------------
-			// 6.1 从 Registry 查找 Tool
+			// 4.6.1 判断 Tool 来源
+			//
+			// Tool 可能来自：
+			//
+			// 1. 本地 Tool Registry
+			// 2. MCP Server
 			// -------------------------------------------------
 
-			tool, ok := a.toolRegistry.Get(toolName)
-
-			if !ok {
-				log.Printf(
-					"unknown tool: %s",
-					toolName,
-				)
-
-				result := fmt.Sprintf(
-					"unknown tool: %s",
-					toolName,
-				)
-
-				a.contextManager.Add(
-					openai.ToolMessage(
-						result,
-						toolCall.ID,
-					),
-				)
-
-				continue
-			}
-
-			// -------------------------------------------------
-			// 6.2 执行 Tool
-			// -------------------------------------------------
-
-			result, err := tool.Handler(arguments)
+			isMCP, err := a.isMCPTool(
+				ctx,
+				toolName,
+			)
 
 			if err != nil {
-				log.Printf(
-					"tool %s failed: %v",
-					toolName,
-					err,
-				)
-
-				// Tool 执行失败也作为 Tool Result
-				// 返回给 LLM。
-				result = fmt.Sprintf(
-					"tool %s failed: %v",
-					toolName,
+				return "", fmt.Errorf(
+					"check MCP tool: %w",
 					err,
 				)
 			}
+
+			var result string
+
+			// -------------------------------------------------
+			// 4.6.2 MCP Tool
+			// -------------------------------------------------
+
+			if isMCP {
+
+				fmt.Println("Tool Source: MCP")
+
+				mcpResult, err := a.mcpClient.CallTool(
+					ctx,
+					toolName,
+					parseToolArguments(arguments),
+				)
+
+				if err != nil {
+
+					log.Printf(
+						"MCP tool %s failed: %v",
+						toolName,
+						err,
+					)
+
+					result = fmt.Sprintf(
+						"MCP tool %s failed: %v",
+						toolName,
+						err,
+					)
+
+				} else {
+
+					resultBytes, err := json.Marshal(
+						mcpResult,
+					)
+
+					if err != nil {
+						result = fmt.Sprintf(
+							"MCP tool %s result marshal failed: %v",
+							toolName,
+							err,
+						)
+					} else {
+						result = string(resultBytes)
+					}
+				}
+
+			} else {
+
+				// -------------------------------------------------
+				// 4.6.3 本地 Tool
+				// -------------------------------------------------
+
+				fmt.Println("Tool Source: Local")
+
+				tool, ok := a.toolRegistry.Get(
+					toolName,
+				)
+
+				if !ok {
+
+					result = fmt.Sprintf(
+						"unknown tool: %s",
+						toolName,
+					)
+
+				} else {
+
+					resultValue, err := tool.Handler(
+						arguments,
+					)
+
+					if err != nil {
+
+						log.Printf(
+							"tool %s failed: %v",
+							toolName,
+							err,
+						)
+
+						result = fmt.Sprintf(
+							"tool %s failed: %v",
+							toolName,
+							err,
+						)
+
+					} else {
+						result = resultValue
+					}
+				}
+			}
+
+			// -------------------------------------------------
+			// 4.6.4 Tool Result
+			// -------------------------------------------------
 
 			fmt.Println("Tool Result:")
 			fmt.Println(result)
 
 			// -------------------------------------------------
-			// 6.3 把 Tool Result 放回 Context
+			// 4.6.5 把 Tool Result 放回 Context
 			// -------------------------------------------------
 
 			a.contextManager.Add(
@@ -284,7 +494,7 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		}
 
 		// =====================================================
-		// 7. 继续下一轮
+		// 4.7 继续下一轮 Agent Loop
 		//
 		// 下一轮 LLM 可以看到：
 		//
@@ -293,21 +503,27 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		// Tool Result
 		//
 		// 然后决定：
+		//
 		// - 再调用 Tool
 		// - 或者直接生成最终答案
 		// =====================================================
 	}
 }
 
+// buildRAGContext 根据用户问题从 RAG 中检索知识。
 func (a *Agent) buildRAGContext(
 	ctx context.Context,
 	query string,
 ) (string, error) {
+
 	if a.rag == nil {
 		return "", nil
 	}
 
-	results, err := a.rag.Retrieve(ctx, query)
+	results, err := a.rag.Retrieve(
+		ctx,
+		query,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -323,6 +539,7 @@ func (a *Agent) buildRAGContext(
 	)
 
 	for _, result := range results {
+
 		builder.WriteString(
 			fmt.Sprintf(
 				"\n[%s]\n%s\n",
@@ -339,24 +556,40 @@ func (a *Agent) buildRAGContext(
 	return builder.String(), nil
 }
 
-// func (a *Agent) buildMemoryContext(query string) string {
-// 	results := a.longTermMemory.Search("Go")
+func (a *Agent) isMCPTool(
+	ctx context.Context,
+	name string,
+) (bool, error) {
+	if a.mcpClient == nil {
+		return false, nil
+	}
 
-// 	if len(results) == 0 {
-// 		return ""
-// 	}
+	mcpTools, err := a.mcpClient.ListTools(ctx)
+	if err != nil {
+		return false, err
+	}
 
-// 	var builder strings.Builder
+	for _, tool := range mcpTools {
+		if tool.Name == name {
+			return true, nil
+		}
+	}
 
-// 	builder.WriteString("以下是与当前请求相关的长期记忆：\n")
+	return false, nil
+}
 
-// 	for _, item := range results {
-// 		builder.WriteString("- ")
-// 		builder.WriteString(item.Key)
-// 		builder.WriteString(": ")
-// 		builder.WriteString(item.Value)
-// 		builder.WriteString("\n")
-// 	}
+func parseToolArguments(
+	arguments string,
+) map[string]any {
 
-// 	return builder.String()
-// }
+	var result map[string]any
+
+	if err := json.Unmarshal(
+		[]byte(arguments),
+		&result,
+	); err != nil {
+		return map[string]any{}
+	}
+
+	return result
+}
