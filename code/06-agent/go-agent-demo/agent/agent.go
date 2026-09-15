@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"go-agent-demo/llm"
+	"go-agent-demo/rag"
 
 	"github.com/openai/openai-go"
 
@@ -29,25 +31,30 @@ type Agent struct {
 	contextManager *memory.ContextManager
 	longTermMemory *memory.Memory
 	queryRewriter  *QueryRewriter
+	rag            *rag.RAG
 }
 
 // New 创建 Agent。
 func New(
 	client *openai.Client,
 	model string,
-
 	toolRegistry *tools.Registry,
 	contextManager *memory.ContextManager,
-
 	longTermMemory *memory.Memory,
+	queryRewriter *QueryRewriter,
+	ragService *rag.RAG,
 ) *Agent {
 	return &Agent{
-		client:         client,
-		model:          model,
+		client: client,
+		model:  model,
+
 		toolRegistry:   toolRegistry,
 		contextManager: contextManager,
+
 		longTermMemory: longTermMemory,
-		queryRewriter:  NewQueryRewriter(client, model),
+		queryRewriter:  queryRewriter,
+
+		rag: ragService,
 	}
 }
 
@@ -114,7 +121,16 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		query := a.contextManager.LastUserMessage()
 
 		memoryContext := a.buildMemoryContext(ctx, query)
-
+		ragContext, err := a.buildRAGContext(ctx, query)
+		if err != nil {
+			return "", fmt.Errorf("build rag context: %w", err)
+		}
+		if ragContext != "" {
+			messages = append(
+				messages,
+				openai.UserMessage(ragContext),
+			)
+		}
 		if memoryContext != "" {
 			messages = append(
 				messages,
@@ -281,6 +297,46 @@ func (a *Agent) Run(ctx context.Context) (string, error) {
 		// - 或者直接生成最终答案
 		// =====================================================
 	}
+}
+
+func (a *Agent) buildRAGContext(
+	ctx context.Context,
+	query string,
+) (string, error) {
+	if a.rag == nil {
+		return "", nil
+	}
+
+	results, err := a.rag.Retrieve(ctx, query)
+	if err != nil {
+		return "", err
+	}
+
+	if len(results) == 0 {
+		return "", nil
+	}
+
+	var builder strings.Builder
+
+	builder.WriteString(
+		"以下是知识库中与当前问题相关的参考资料：\n",
+	)
+
+	for _, result := range results {
+		builder.WriteString(
+			fmt.Sprintf(
+				"\n[%s]\n%s\n",
+				result.Chunk.ID,
+				result.Chunk.Content,
+			),
+		)
+	}
+
+	builder.WriteString(
+		"\n回答问题时，如果使用知识库内容，请以知识库为依据，不要编造知识库中不存在的信息。",
+	)
+
+	return builder.String(), nil
 }
 
 // func (a *Agent) buildMemoryContext(query string) string {

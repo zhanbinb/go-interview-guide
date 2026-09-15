@@ -8,8 +8,10 @@ import (
 
 	"go-agent-demo/agent"
 	"go-agent-demo/config"
+	"go-agent-demo/embedding"
 	"go-agent-demo/llm"
 	"go-agent-demo/memory"
+	"go-agent-demo/rag"
 	"go-agent-demo/tools"
 	"go-agent-demo/workflow"
 )
@@ -57,6 +59,11 @@ func main() {
 
 	ctx := context.Background()
 
+	queryRewriter := agent.NewQueryRewriter(
+		&client,
+		model,
+	)
+
 	// =========================================================
 	// 3. 创建 Tool Registry
 	// =========================================================
@@ -84,7 +91,43 @@ func main() {
 	// 这正是 Long-term Memory 的核心意义。
 	//
 
-	longTermMemory := memory.NewMemory()
+	embedder := embedding.NewFakeEmbedder(8)
+
+	longTermMemory := memory.NewMemory(
+		embedder,
+	)
+
+	knowledgeBase := rag.NewKnowledgeBase(embedder)
+
+	err = knowledgeBase.AddDocument(
+		rag.Document{
+			ID: "refund-policy",
+			Content: `退款规则
+
+普通商品支持购买后7天内申请退款。
+
+如果商品已经发货，用户仍然可以提交退款申请，
+但需要根据物流状态进行处理。
+
+虚拟商品一旦完成交付，通常不支持退款。
+
+退款金额原则上按照实际支付金额计算。`,
+		},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	retriever := rag.NewRetriever(
+		knowledgeBase,
+		embedder,
+	)
+
+	ragService := rag.NewRAG(
+		retriever,
+		&client,
+		p.Model,
+	)
 
 	// =========================================================
 	// 5. Session 1
@@ -120,6 +163,8 @@ func main() {
 		toolRegistry,
 		ctxManager1,
 		longTermMemory,
+		queryRewriter,
+		ragService,
 	)
 
 	session1Prompts := []string{
@@ -202,6 +247,25 @@ func main() {
 	fmt.Println("             Session 1 Finished")
 	fmt.Println("=========================================================")
 
+	fmt.Println("\n========== Vector Search Test ==========")
+
+	vectorResults := longTermMemory.SearchVectorTopK(
+		"我的职业方向是什么？",
+		5,
+	)
+
+	for _, result := range vectorResults {
+
+		fmt.Printf(
+			"key=%s similarity=%.4f value=%s\n",
+			result.Item.Key,
+			result.Similarity,
+			result.Item.Value,
+		)
+	}
+
+	fmt.Println("========================================")
+
 	// =========================================================
 	// 8. Session 2
 	// =========================================================
@@ -243,6 +307,8 @@ func main() {
 		toolRegistry,
 		ctxManager2,
 		longTermMemory,
+		queryRewriter,
+		ragService,
 	)
 
 	// =========================================================
@@ -312,4 +378,34 @@ func main() {
 			item.Value,
 		)
 	}
+
+	// =========================================================
+	// 11. RAG Test
+	// =========================================================
+
+	fmt.Println()
+	fmt.Println("=========================================================")
+	fmt.Println("                    RAG Test")
+	fmt.Println("=========================================================")
+
+	ragPrompt := "普通商品购买后多少天可以申请退款？"
+
+	fmt.Println()
+	fmt.Println("User:")
+	fmt.Println(ragPrompt)
+
+	answer, err := agent2.Chat(
+		ctx,
+		ragPrompt,
+	)
+	if err != nil {
+		log.Printf("rag test failed: %v", err)
+	} else {
+		fmt.Println()
+		fmt.Println("Agent:")
+		fmt.Println(answer)
+	}
+
+	fmt.Println()
+	fmt.Println("=========================================================")
 }

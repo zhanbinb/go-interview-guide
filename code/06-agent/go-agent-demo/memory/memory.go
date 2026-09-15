@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"go-agent-demo/embedding"
 	"regexp"
 	"sort"
 	"strings"
@@ -23,18 +24,325 @@ type ScoredMemoryItem struct {
 }
 
 type Memory struct {
-	data map[string]string
+	data     map[string]string
+	vectors  map[string][]float64
+	embedder embedding.Embedder
 }
 
-// NewMemory 创建 Memory。
-func NewMemory() *Memory {
+type VectorSearchResult struct {
+	Item       MemoryItem
+	Similarity float64
+}
+
+// HybridSearchResult 表示 Hybrid Search 的结果。
+//
+// 同时保存：
+// 1. Keyword Score
+// 2. Vector Similarity
+// 3. 最终 Hybrid Score
+type HybridSearchResult struct {
+	Item         MemoryItem
+	KeywordScore float64
+	VectorScore  float64
+	HybridScore  float64
+}
+
+// SearchHybridTopK 同时使用 Keyword Search 和 Vector Search。
+//
+// 当前策略：
+//
+//	Hybrid Score
+//	= 0.5 * Keyword Score
+//	+ 0.5 * Vector Similarity
+//
+// 注意：
+// Keyword Score 在融合之前会进行归一化。
+func (m *Memory) SearchHybridTopK(
+	query string,
+	topK int,
+) []HybridSearchResult {
+
+	if strings.TrimSpace(query) == "" {
+		return nil
+	}
+
+	if topK <= 0 {
+		return nil
+	}
+
+	// -----------------------------------------
+	// 1. Keyword Search
+	// -----------------------------------------
+
+	keywords := extractKeywords(query)
+
+	keywordScores := make(
+		map[string]int,
+	)
+
+	var maxKeywordScore int
+
+	if len(keywords) > 0 {
+
+		for key, value := range m.data {
+
+			lowerKey := strings.ToLower(key)
+			lowerValue := strings.ToLower(value)
+
+			score := 0
+
+			for _, keyword := range keywords {
+
+				if lowerKey == keyword {
+					score += 10
+					continue
+				}
+
+				if strings.Contains(
+					lowerKey,
+					keyword,
+				) {
+					score += 5
+				}
+
+				if strings.Contains(
+					lowerValue,
+					keyword,
+				) {
+					score += 2
+				}
+			}
+
+			if score > 0 {
+
+				keywordScores[key] = score
+
+				if score > maxKeywordScore {
+					maxKeywordScore = score
+				}
+			}
+		}
+	}
+
+	// -----------------------------------------
+	// 2. Vector Search
+	// -----------------------------------------
+
+	vectorScores := make(
+		map[string]float64,
+	)
+
+	if m.embedder != nil {
+
+		queryVector, err :=
+			m.embedder.Embed(query)
+
+		if err == nil {
+
+			for key, vector := range m.vectors {
+
+				similarity :=
+					embedding.CosineSimilarity(
+						queryVector,
+						vector,
+					)
+
+				vectorScores[key] = similarity
+			}
+		}
+	}
+
+	// -----------------------------------------
+	// 3. Merge Candidates
+	// -----------------------------------------
+
+	candidateKeys := make(
+		map[string]bool,
+	)
+
+	for key := range keywordScores {
+		candidateKeys[key] = true
+	}
+
+	for key := range vectorScores {
+		candidateKeys[key] = true
+	}
+
+	results := make(
+		[]HybridSearchResult,
+		0,
+		len(candidateKeys),
+	)
+
+	// -----------------------------------------
+	// 4. Score Fusion
+	// -----------------------------------------
+
+	for key := range candidateKeys {
+
+		value := m.data[key]
+
+		var keywordScore float64
+
+		if maxKeywordScore > 0 {
+
+			keywordScore =
+				float64(
+					keywordScores[key],
+				) /
+					float64(maxKeywordScore)
+		}
+
+		vectorScore :=
+			vectorScores[key]
+
+		hybridScore :=
+			0.5*keywordScore +
+				0.5*vectorScore
+
+		results = append(
+			results,
+			HybridSearchResult{
+				Item: MemoryItem{
+					Key:   key,
+					Value: value,
+				},
+				KeywordScore: keywordScore,
+				VectorScore:  vectorScore,
+				HybridScore:  hybridScore,
+			},
+		)
+	}
+
+	// -----------------------------------------
+	// 5. Ranking
+	// -----------------------------------------
+
+	sort.Slice(
+		results,
+		func(i, j int) bool {
+
+			if results[i].HybridScore !=
+				results[j].HybridScore {
+
+				return results[i].HybridScore >
+					results[j].HybridScore
+			}
+
+			return results[i].Item.Key <
+				results[j].Item.Key
+		},
+	)
+
+	// -----------------------------------------
+	// 6. Top K
+	// -----------------------------------------
+
+	if len(results) > topK {
+		results = results[:topK]
+	}
+
+	return results
+}
+
+func (m *Memory) SearchVectorTopK(
+	query string,
+	topK int,
+) []VectorSearchResult {
+
+	if m.embedder == nil {
+		return nil
+	}
+
+	if strings.TrimSpace(query) == "" {
+		return nil
+	}
+
+	if topK <= 0 {
+		return nil
+	}
+
+	queryVector, err := m.embedder.Embed(query)
+	if err != nil {
+		return nil
+	}
+
+	results := make(
+		[]VectorSearchResult,
+		0,
+		len(m.data),
+	)
+
+	for key, value := range m.data {
+
+		vector, exists := m.vectors[key]
+
+		if !exists {
+			continue
+		}
+
+		similarity :=
+			embedding.CosineSimilarity(
+				queryVector,
+				vector,
+			)
+
+		results = append(
+			results,
+			VectorSearchResult{
+				Item: MemoryItem{
+					Key:   key,
+					Value: value,
+				},
+				Similarity: similarity,
+			},
+		)
+	}
+
+	sort.Slice(
+		results,
+		func(i, j int) bool {
+
+			if results[i].Similarity !=
+				results[j].Similarity {
+
+				return results[i].Similarity >
+					results[j].Similarity
+			}
+
+			return results[i].Item.Key <
+				results[j].Item.Key
+		},
+	)
+
+	if len(results) > topK {
+		results = results[:topK]
+	}
+
+	return results
+}
+
+func NewMemory(
+	embedder embedding.Embedder,
+) *Memory {
+
 	return &Memory{
-		data: make(map[string]string),
+		data: make(
+			map[string]string,
+		),
+		vectors: make(
+			map[string][]float64,
+		),
+		embedder: embedder,
 	}
 }
 
 // Save 保存一条 Memory。
-func (m *Memory) Save(key, value string) {
+func (m *Memory) Save(
+	key string,
+	value string,
+) {
+
 	key = strings.TrimSpace(key)
 	value = strings.TrimSpace(value)
 
@@ -43,6 +351,19 @@ func (m *Memory) Save(key, value string) {
 	}
 
 	m.data[key] = value
+
+	// 如果配置了 Embedder，
+	// 保存 Memory 的同时生成 Vector。
+	if m.embedder != nil {
+
+		vector, err := m.embedder.Embed(
+			key + " " + value,
+		)
+
+		if err == nil {
+			m.vectors[key] = vector
+		}
+	}
 }
 
 // Get 获取指定 Memory。

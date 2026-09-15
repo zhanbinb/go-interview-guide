@@ -52,8 +52,6 @@ func (a *Agent) buildMemoryContext(
 			err,
 		)
 
-		// Rewrite 失败时，
-		// 至少使用原始 Query。
 		queries = []string{query}
 	}
 
@@ -62,71 +60,75 @@ func (a *Agent) buildMemoryContext(
 	fmt.Println("Rewritten Queries:", queries)
 	fmt.Println("===================================")
 
-	// --------------------------------------------------
-	// Candidate Retrieval
-	// --------------------------------------------------
+	// -----------------------------------------
+	// Candidate Merge
+	// -----------------------------------------
 	//
-	// 多个 Query 分别检索 Memory，
-	// 然后把结果合并。
-	//
-	// map 的 Key 使用 Memory Key，
-	// 防止同一条 Memory 被多个 Query 重复加入。
+	// 多个 Query 可能命中同一条 Memory。
 	//
 	// 例如：
 	//
 	// Query 1 -> user_profession
 	// Query 2 -> 职业
-	// Query 3 -> Go backend
+	// Query 3 -> 工作
 	//
-	// 最终 user_profession 仍然只保留一条。
-	// --------------------------------------------------
+	// 最终只保留一条 Memory。
+	//
+	// 如果同一个 Memory 被多个 Query 命中，
+	// 保留最高 Hybrid Score。
+	// -----------------------------------------
 
 	candidates := make(
-		map[string]memory.ScoredMemoryItem,
+		map[string]memory.HybridSearchResult,
 	)
 
 	for _, q := range queries {
 
-		results := a.longTermMemory.SearchRelevantTopK(
-			q,
-			5,
+		results :=
+			a.longTermMemory.SearchHybridTopK(
+				q,
+				5,
+			)
+
+		fmt.Println(
+			"\n========== Hybrid Retrieval ==========",
 		)
 
 		fmt.Println(
-			"\nMemory Query:",
+			"Query:",
 			q,
 		)
 
 		for _, result := range results {
 
 			fmt.Printf(
-				"Candidate: key=%s value=%s score=%d\n",
+				"Candidate: key=%s keyword=%.4f vector=%.4f hybrid=%.4f value=%s\n",
 				result.Item.Key,
+				result.KeywordScore,
+				result.VectorScore,
+				result.HybridScore,
 				result.Item.Value,
-				result.Score,
 			)
 
 			existing, exists :=
 				candidates[result.Item.Key]
 
-			// 同一个 Memory 可能被多个 Query 命中。
-			//
-			// 当前简单策略：
-			// 保留最高 Score。
 			if !exists ||
-				result.Score > existing.Score {
+				result.HybridScore >
+					existing.HybridScore {
 
-				candidates[result.Item.Key] = result
+				candidates[result.Item.Key] =
+					result
 			}
 		}
 	}
 
-	// --------------------------------------------------
-	// Ranking
-	// --------------------------------------------------
+	// -----------------------------------------
+	// Global Ranking
+	// -----------------------------------------
 
 	ranked := make(
-		[]memory.ScoredMemoryItem,
+		[]memory.HybridSearchResult,
 		0,
 		len(candidates),
 	)
@@ -143,9 +145,11 @@ func (a *Agent) buildMemoryContext(
 		ranked,
 		func(i, j int) bool {
 
-			if ranked[i].Score != ranked[j].Score {
-				return ranked[i].Score >
-					ranked[j].Score
+			if ranked[i].HybridScore !=
+				ranked[j].HybridScore {
+
+				return ranked[i].HybridScore >
+					ranked[j].HybridScore
 			}
 
 			return ranked[i].Item.Key <
@@ -153,9 +157,9 @@ func (a *Agent) buildMemoryContext(
 		},
 	)
 
-	// --------------------------------------------------
+	// -----------------------------------------
 	// Top K
-	// --------------------------------------------------
+	// -----------------------------------------
 
 	const topK = 5
 
@@ -163,23 +167,29 @@ func (a *Agent) buildMemoryContext(
 		ranked = ranked[:topK]
 	}
 
-	fmt.Println("\n========== Memory Ranking ==========")
+	fmt.Println(
+		"\n========== Final Memory Ranking ==========",
+	)
 
 	for _, result := range ranked {
 
 		fmt.Printf(
-			"key=%s score=%d value=%s\n",
+			"key=%s keyword=%.4f vector=%.4f hybrid=%.4f value=%s\n",
 			result.Item.Key,
-			result.Score,
+			result.KeywordScore,
+			result.VectorScore,
+			result.HybridScore,
 			result.Item.Value,
 		)
 	}
 
-	fmt.Println("====================================")
+	fmt.Println(
+		"==========================================",
+	)
 
-	// --------------------------------------------------
-	// 没有找到 Memory
-	// --------------------------------------------------
+	// -----------------------------------------
+	// No Memory
+	// -----------------------------------------
 
 	if len(ranked) == 0 {
 
@@ -193,9 +203,9 @@ func (a *Agent) buildMemoryContext(
 `
 	}
 
-	// --------------------------------------------------
-	// 构造 Memory Context
-	// --------------------------------------------------
+	// -----------------------------------------
+	// Build Memory Context
+	// -----------------------------------------
 
 	var builder strings.Builder
 
