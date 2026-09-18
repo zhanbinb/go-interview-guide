@@ -3,7 +3,7 @@
 > 🎯 目标：系统性地概览 Agent 开发，建立全景认知
 > 📚 假设：已有 Go 后端基础，正在准备面试
 > ⏱️ 时间预算：12 步，约 13.5 小时（不含已完成部分）
-> 📅 路线版本：v5（新增 MCP + Router，已完成工具调用标准化和能力路由）
+> 📅 路线版本：v6（新增 LangChain + LangGraph 对照学习，框架视角已建立）
 
 ---
 
@@ -301,7 +301,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 | 7 | Agent 编排模式 | ✅ | [笔记](notes/agent-orchestration.md) |
 | **8** | **Memory** | ✅ | [笔记](notes/memory.md) |
 | 9 | MCP + Router | ✅ | [笔记](notes/mcp.md) + [笔记](notes/router.md) |
-| 10 | Multi-Agent | ⬜ | |
+| **10** | **LangChain / LangGraph** | ✅ | [笔记](notes/langchain-langgraph.md) |
 | 11 | Evaluation | ⬜ | |
 | 12 | Agent 工程化 | ⬜ | |
 
@@ -333,12 +333,12 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 ## 11. 下一步
 
-**Step 10 · Multi-Agent** —— 多个 Agent 协作完成复杂任务
+**Step 11 · Agentic RAG** —— Agent 决定什么时候、查什么、怎么用 RAG
 
-可以告诉我「开始 Step 10」，我会帮你：
-- 理解 Supervisor / Swarm 两种多 Agent 架构
-- 跑一个 CrewAI 或 AutoGen 的最小 Demo
-- 把现有 Agent 改造成可被 Supervisor 调用的 Worker
+LangGraph 基础已完成（包括生产扩展），下一步重点是 **Agentic RAG**：
+- 之前学的 RAG（08）是「文档 → 检索 → LLM」的被动链路
+- Agentic RAG 是「Agent 决定要不要查 RAG、查什么、查完怎么用」
+- 会涉及：LangGraph + RAG + Knowledge Base + 智能路由
 
 **路线完整度**：
 ```
@@ -346,8 +346,8 @@ export ANTHROPIC_API_KEY=sk-ant-...
 ✅ Step 6    Context Management
 ✅ Step 7    Agent 编排
 ✅ Step 8    Memory + RAG + Embedding + Query Rewrite
-✅ Step 9    MCP + Router（能力路由 + 工具标准化）
-⬜ Step 10   Multi-Agent
+✅ Step 9    MCP + Router
+✅ Step 10   LangChain + LangGraph
 ⬜ Step 11   Evaluation
 ⬜ Step 12   Agent 工程化
 ```

@@ -28,12 +28,19 @@
 | 6 | [embedding-vector-search.md](./embedding-vector-search.md) | Step 8 · Embedding & 向量检索 | `embedding/` | ✅ |
 | 7 | [rag.md](./rag.md) | Step 8 · RAG 完整链路 | `rag/` (3 文件) | ✅ |
 
-### ✅ Step 9 笔记（今天新完成）
+### ✅ Step 9 笔记
 
 | # | 笔记 | 对应学习路线 | 关键代码 | 状态 |
 |---|------|------------|---------|------|
 | 8 | [router.md](./router.md) | Step 9 · Capability Router | `agent/router.go` | ✅ |
 | 9 | [mcp.md](./mcp.md) | Step 9 · MCP 详解 | `mcp/` + `mcp-sdk-demo/` | ✅ |
+
+### ✅ Step 10 笔记（LangChain/LangGraph）
+
+| # | 笔记 | 对应学习路线 | 关键代码 | 状态 |
+|---|------|------------|---------|------|
+| 10 | [langchain-langgraph.md](./langchain-langgraph.md) | Step 10 · LangChain + LangGraph（15 个 demo）| `langchain-agent-demo/` | ✅ |
+| 11 | [langgraph-production-extensions.md](./langgraph-production-extensions.md) | Step 10 扩展 · 生产落地（HITL/Checkpointer/Memory vs Checkpoint/FastAPI）| — | ✅ |
 
 ## 🗺️ 推荐阅读顺序
 
@@ -77,6 +84,7 @@
 | Step 8 RAG 扩展 | [rag.md](./rag.md) | ✅ |
 | Step 9 Router | [router.md](./router.md) | ✅ |
 | Step 9 MCP | [mcp.md](./mcp.md) | ✅ |
+| Step 10 LangChain/LangGraph | [langchain-langgraph.md](./langchain-langgraph.md) + [langgraph-production-extensions.md](./langgraph-production-extensions.md) | ✅ |
 | Step 8 架构视角 | [agent-architecture.md](./agent-architecture.md) | ✅ |
 | Step 9 MCP | 待学 | ⬜ |
 | Step 10 Multi-Agent | 待学 | ⬜ |
