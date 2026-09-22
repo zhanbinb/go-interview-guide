@@ -42,6 +42,12 @@
 | 10 | [langchain-langgraph.md](./langchain-langgraph.md) | Step 10 · LangChain + LangGraph（15 个 demo）| `langchain-agent-demo/` | ✅ |
 | 11 | [langgraph-production-extensions.md](./langgraph-production-extensions.md) | Step 10 扩展 · 生产落地（HITL/Checkpointer/Memory vs Checkpoint/FastAPI）| — | ✅ |
 
+### ✅ Step 11 笔记（Agentic RAG + 求职定位）
+
+| # | 笔记 | 对应学习路线 | 关键代码 | 状态 |
+|---|------|------------|---------|------|
+| 12 | [agentic-rag-full-pipeline.md](./agentic-rag-full-pipeline.md) | Step 11 · Agentic RAG 完整链路 + 求职定位 | `langchain-agent-demo/17-30` | ✅ |
+
 ## 🗺️ 推荐阅读顺序
 
 ### 第一次系统学（按顺序）
@@ -85,6 +91,7 @@
 | Step 9 Router | [router.md](./router.md) | ✅ |
 | Step 9 MCP | [mcp.md](./mcp.md) | ✅ |
 | Step 10 LangChain/LangGraph | [langchain-langgraph.md](./langchain-langgraph.md) + [langgraph-production-extensions.md](./langgraph-production-extensions.md) | ✅ |
+| Step 11 Agentic RAG | [agentic-rag-full-pipeline.md](./agentic-rag-full-pipeline.md) | ✅ |
 | Step 8 架构视角 | [agent-architecture.md](./agent-architecture.md) | ✅ |
 | Step 9 MCP | 待学 | ⬜ |
 | Step 10 Multi-Agent | 待学 | ⬜ |

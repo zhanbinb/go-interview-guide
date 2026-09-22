@@ -3,7 +3,7 @@
 > 🎯 目标：系统性地概览 Agent 开发，建立全景认知
 > 📚 假设：已有 Go 后端基础，正在准备面试
 > ⏱️ 时间预算：12 步，约 13.5 小时（不含已完成部分）
-> 📅 路线版本：v6（新增 LangChain + LangGraph 对照学习，框架视角已建立）
+> 📅 路线版本：v7（新增 Agentic RAG 完整链路 + 求职定位建议）
 
 ---
 
@@ -302,7 +302,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 | **8** | **Memory** | ✅ | [笔记](notes/memory.md) |
 | 9 | MCP + Router | ✅ | [笔记](notes/mcp.md) + [笔记](notes/router.md) |
 | **10** | **LangChain / LangGraph** | ✅ | [笔记](notes/langchain-langgraph.md) |
-| 11 | Evaluation | ⬜ | |
+| **11** | **Agentic RAG** | ✅ | [笔记](notes/agentic-rag-full-pipeline.md) |
 | 12 | Agent 工程化 | ⬜ | |
 
 ---
@@ -333,12 +333,15 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 ## 11. 下一步
 
-**Step 11 · Agentic RAG** —— Agent 决定什么时候、查什么、怎么用 RAG
+**Step 12 · Multi-Agent + 可观测性 + Evaluation** —— 优先级最高的 3 块
 
-LangGraph 基础已完成（包括生产扩展），下一步重点是 **Agentic RAG**：
-- 之前学的 RAG（08）是「文档 → 检索 → LLM」的被动链路
-- Agentic RAG 是「Agent 决定要不要查 RAG、查什么、查完怎么用」
-- 会涉及：LangGraph + RAG + Knowledge Base + 智能路由
+Agentic RAG 已完成（含 Metadata Filter + Reranker + 持久化），下一步按 ChatGPT 建议的优先级：
+
+1. **Multi-Agent**（Supervisor / Swarm 模式）⭐⭐⭐
+2. **可观测性**（LangSmith / LangFuse）⭐⭐
+3. **Evaluation**（Trajectory Eval / Outcome Eval）⭐⭐
+
+这 3 块都是企业 Agent 岗面试高频题。
 
 **路线完整度**：
 ```
