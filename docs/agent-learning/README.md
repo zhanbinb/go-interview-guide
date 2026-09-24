@@ -3,7 +3,7 @@
 > 🎯 目标：系统性地概览 Agent 开发，建立全景认知
 > 📚 假设：已有 Go 后端基础，正在准备面试
 > ⏱️ 时间预算：12 步，约 13.5 小时（不含已完成部分）
-> 📅 路线版本：v7（新增 Agentic RAG 完整链路 + 求职定位建议）
+> 📅 路线版本：v8（新增 Tool 安全 + 可靠性 + Multi-Agent 思路；12 步全部完成）
 
 ---
 
@@ -303,7 +303,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 | 9 | MCP + Router | ✅ | [笔记](notes/mcp.md) + [笔记](notes/router.md) |
 | **10** | **LangChain / LangGraph** | ✅ | [笔记](notes/langchain-langgraph.md) |
 | **11** | **Agentic RAG** | ✅ | [笔记](notes/agentic-rag-full-pipeline.md) |
-| 12 | Agent 工程化 | ⬜ | |
+| **12** | **Tool 安全 + 可靠性** | ✅ | [笔记](notes/agent-tool-security-and-reliability.md) |
 
 ---
 
@@ -333,15 +333,14 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 ## 11. 下一步
 
-**Step 12 · Multi-Agent + 可观测性 + Evaluation** —— 优先级最高的 3 块
+🎉 **12 步学习路线全部完成！**
 
-Agentic RAG 已完成（含 Metadata Filter + Reranker + 持久化），下一步按 ChatGPT 建议的优先级：
+剩余 3 个补充方向（按需选择）：
+1. **Multi-Agent 实战**（Supervisor / Swarm + Subgraph）⭐⭐⭐
+2. **可观测性**（LangSmith / LangFuse 接入）⭐⭐⭐
+3. **Evaluation**（Trajectory Eval / Outcome Eval）⭐⭐⭐
 
-1. **Multi-Agent**（Supervisor / Swarm 模式）⭐⭐⭐
-2. **可观测性**（LangSmith / LangFuse）⭐⭐
-3. **Evaluation**（Trajectory Eval / Outcome Eval）⭐⭐
-
-这 3 块都是企业 Agent 岗面试高频题。
+**建议下一步**：整理成最终学习报告 / 制作项目 Demo / 准备面试。
 
 **路线完整度**：
 ```

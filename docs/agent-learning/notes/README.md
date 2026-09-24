@@ -48,6 +48,18 @@
 |---|------|------------|---------|------|
 | 12 | [agentic-rag-full-pipeline.md](./agentic-rag-full-pipeline.md) | Step 11 · Agentic RAG 完整链路 + 求职定位 | `langchain-agent-demo/17-30` | ✅ |
 
+### ✅ Step 12 笔记（Tool 安全 + 可靠性）
+
+| # | 笔记 | 对应学习路线 | 关键代码 | 状态 |
+|---|------|------------|---------|------|
+| 13 | [agent-tool-security-and-reliability.md](./agent-tool-security-and-reliability.md) | Step 12 · Tool 权限 / HITL / Idempotency / Multi-Agent | `langchain-agent-demo/31-38` | ✅ |
+
+### ✅ Step 13 笔记（Multi-Agent 架构实战）
+
+| # | 笔记 | 对应学习路线 | 关键代码 | 状态 |
+|---|------|------------|---------|------|
+| 14 | [multi-agent-architecture.md](./multi-agent-architecture.md) | Step 13 · Multi-Agent 完整架构（Sub-Agent as Tool / 分布式 HTTP / Trace ID）| `langchain-agent-demo/39_multi_agent` | ✅ |
+
 ## 🗺️ 推荐阅读顺序
 
 ### 第一次系统学（按顺序）
@@ -92,6 +104,8 @@
 | Step 9 MCP | [mcp.md](./mcp.md) | ✅ |
 | Step 10 LangChain/LangGraph | [langchain-langgraph.md](./langchain-langgraph.md) + [langgraph-production-extensions.md](./langgraph-production-extensions.md) | ✅ |
 | Step 11 Agentic RAG | [agentic-rag-full-pipeline.md](./agentic-rag-full-pipeline.md) | ✅ |
+| Step 12 Tool 安全 + 可靠性 | [agent-tool-security-and-reliability.md](./agent-tool-security-and-reliability.md) | ✅ |
+| Step 13 Multi-Agent 架构 | [multi-agent-architecture.md](./multi-agent-architecture.md) | ✅ |
 | Step 8 架构视角 | [agent-architecture.md](./agent-architecture.md) | ✅ |
 | Step 9 MCP | 待学 | ⬜ |
 | Step 10 Multi-Agent | 待学 | ⬜ |
