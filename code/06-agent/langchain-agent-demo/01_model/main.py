@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 
 model = ChatOpenAI(
-    model="MiniMax-M3",
+    model="mimo-v2.6-pro",
     temperature=0,
     base_url=os.getenv("OPENAI_BASE_URL"),
     api_key=os.getenv("OPENAI_API_KEY"),
